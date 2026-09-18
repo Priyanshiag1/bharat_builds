@@ -61,3 +61,32 @@ export function updateClaimStatus(claimId: string, status: "SETTLED" | "NOTICE_S
   }
   return updated;
 }
+
+export function mapClaimAssessmentToClaimData(assessment: any, fallback: ClaimData = mockClaim): ClaimData {
+  if (!assessment) return fallback;
+  const norm = assessment.normalizedData || {};
+  const interest = assessment.interestCalculation;
+  const reply = assessment.buyerReplyClassification;
+  const strength = assessment.strengthScore;
+  const gaps = assessment.evidenceGaps;
+
+  return {
+    ...fallback,
+    claim_id: assessment.claimId || fallback.claim_id,
+    invoice_number: norm.invoiceNumber?.value || fallback.invoice_number,
+    invoice_date: norm.invoiceDate?.value || fallback.invoice_date,
+    principal_amount: norm.principalAmount?.value ?? fallback.principal_amount,
+    buyer_name: norm.buyerName?.value || fallback.buyer_name,
+    buyer_gstin: norm.buyerGstin?.value || fallback.buyer_gstin,
+    seller_gstin: norm.sellerGstin?.value || fallback.seller_gstin,
+    has_signed_pod: gaps ? gaps.deliveryChallan !== "missing" : fallback.has_signed_pod,
+    days_overdue: interest?.daysOverdue ?? fallback.days_overdue,
+    accrued_interest: interest?.interestAccrued ?? fallback.accrued_interest,
+    total_claimable_amount: interest?.totalClaimAmount ?? fallback.total_claimable_amount,
+    claim_strength_score: strength?.score ?? fallback.claim_strength_score,
+    stalling_category: reply?.category ? reply.category.replace(/_/g, " ").toUpperCase() : fallback.stalling_category,
+    counter_reasoning: reply?.explanation || fallback.counter_reasoning,
+    classification_mode: reply?.classificationMode || "bedrock",
+    component_scores: strength?.componentScores,
+  };
+}

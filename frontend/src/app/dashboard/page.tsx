@@ -168,9 +168,18 @@ export default function DashboardPage() {
                 </h4>
               </div>
             </div>
-            <span className="text-xs px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-medium">
-              Legitimacy: Low (Commercial Pretext)
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-medium">
+                Legitimacy: Low (Commercial Pretext)
+              </span>
+              <span className={`text-[10px] uppercase font-mono px-2.5 py-0.5 rounded-full border font-semibold ${
+                claim.classification_mode === "offline_fallback"
+                  ? "bg-slate-800 text-slate-400 border-slate-700"
+                  : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+              }`}>
+                {claim.classification_mode === "offline_fallback" ? "Offline Fallback" : "AWS Bedrock"}
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
