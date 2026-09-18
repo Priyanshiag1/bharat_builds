@@ -3,6 +3,7 @@ import { ClaimIntakeService } from './core/module1-intake';
 import { ClaimScoringService } from './core/module2-scoring';
 import { BedrockBuyerClassifier } from './adapters/bedrock-classifier';
 import { PersonCApiAdapter } from './adapters/person-c-adapter';
+import { LocalFixtureProvider } from './adapters/document-provider-adapter';
 
 async function runCLI() {
   const args = process.argv.slice(2);
@@ -32,13 +33,17 @@ async function runCLI() {
     const scoring = new ClaimScoringService();
     const classifier = new BedrockBuyerClassifier();
     const interestAdapter = new PersonCApiAdapter();
+    const documentProvider = new LocalFixtureProvider();
 
     console.log(`\nProcessing Claim ID: ${fixture.claimId}`);
     console.log('------------------------------------------------');
 
     // Module 1
-    const rawInvoiceId = Object.keys(fixture.rawExtractionPayloads)[0];
-    const rawInvoice = fixture.rawExtractionPayloads[rawInvoiceId];
+    const rawInvoice = await documentProvider.extractDocument({
+      documentId: 'doc-inv-1',
+      localFixtureId: fixture.claimId
+    });
+
     if (!rawInvoice) {
       console.error('ERROR: Missing raw extraction payload for invoice.');
       process.exit(1);
