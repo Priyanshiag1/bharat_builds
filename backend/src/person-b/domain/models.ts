@@ -61,6 +61,7 @@ export interface BuyerReplyClassification {
   explanation: string;
   detectedSignals: string[];
   recommendedAction: string;
+  classificationMode?: 'bedrock' | 'offline_fallback';
 }
 
 export interface ClaimStrengthScore {

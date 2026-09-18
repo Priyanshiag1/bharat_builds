@@ -1,7 +1,7 @@
 import { FixtureLoader } from './fixtures/fixture-loader';
 import { ClaimIntakeService } from './core/module1-intake';
 import { ClaimScoringService } from './core/module2-scoring';
-import { LocalBuyerClassifier } from './adapters/buyer-classifier-adapter';
+import { BedrockBuyerClassifier } from './adapters/bedrock-classifier';
 import { PersonCApiAdapter } from './adapters/person-c-adapter';
 
 async function runCLI() {
@@ -30,7 +30,7 @@ async function runCLI() {
 
     const intake = new ClaimIntakeService();
     const scoring = new ClaimScoringService();
-    const classifier = new LocalBuyerClassifier();
+    const classifier = new BedrockBuyerClassifier();
     const interestAdapter = new PersonCApiAdapter();
 
     console.log(`\nProcessing Claim ID: ${fixture.claimId}`);
@@ -62,7 +62,7 @@ async function runCLI() {
     console.log(`Calculation Mode:  ${interest.calculationMode === 'api' ? '✅ Person C API' : '⚠️ Offline Fallback'}`);
     console.log(`RBI Rate / Mult:   ${interest.bankRate}% / ${interest.statutoryMultiplier}x`);
     console.log(`Strength Score:    ${assessment.strengthScore?.score}/100`);
-    console.log(`Buyer Class:       ${assessment.buyerReplyClassification?.category || 'None'}`);
+    console.log(`Buyer Class:       ${assessment.buyerReplyClassification?.category || 'None'} (Mode: ${assessment.buyerReplyClassification?.classificationMode || 'Unknown'})`);
     console.log(`Interest Provider: ${interest.explanation}`);
     console.log(`Missing Data:      ${assessment.strengthScore?.missingDataHandling || 'None'}`);
     console.log(`Recommended Act:   ${assessment.strengthScore?.recommendedAction}`);

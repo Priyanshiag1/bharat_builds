@@ -42,6 +42,6 @@ export class LocalBuyerClassifier implements BuyerClassifierEngine {
     if (category === 'valid_dispute') recommendedAction = 'Pause escalation; resolve defect dispute';
     if (category === 'phantom_dispute') recommendedAction = 'Proceed immediately to Tier 2 escalation';
 
-    return { category, confidence, explanation, detectedSignals, recommendedAction };
+    return { category, confidence, explanation, detectedSignals, recommendedAction, classificationMode: 'offline_fallback' };
   }
 }
