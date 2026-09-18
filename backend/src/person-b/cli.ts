@@ -66,6 +66,7 @@ async function runCLI() {
     console.log(`Claim ID:          ${fixture.claimId}`);
     console.log(`Calculation Mode:  ${interest.calculationMode === 'api' ? '✅ Person C API' : '⚠️ Offline Fallback'}`);
     console.log(`RBI Rate / Mult:   ${interest.bankRate}% / ${interest.statutoryMultiplier}x`);
+    console.log(`Applicable Rate:   ${interest.applicableInterestRate}%`);
     console.log(`Strength Score:    ${assessment.strengthScore?.score}/100`);
     console.log(`Buyer Class:       ${assessment.buyerReplyClassification?.category || 'None'} (Mode: ${assessment.buyerReplyClassification?.classificationMode || 'Unknown'})`);
     console.log(`Interest Provider: ${interest.explanation}`);

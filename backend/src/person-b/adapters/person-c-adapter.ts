@@ -10,11 +10,13 @@ export interface InterestEngine {
  * 
  * CONFIGURATION:
  * Person C's API uses: RBI_RATE = 6.75% (DynamoDB backed)
- * Local Fallback uses: FALLBACK_RBI_RATE = 6.5% (Deterministic offline)
+ * Local Fallback uses deterministic offline fallback.
  */
-const FALLBACK_RBI_RATE = 6.5;
-const FALLBACK_STATUTORY_MULTIPLIER = 3.0;
-const FALLBACK_STATUTORY_RATE = FALLBACK_RBI_RATE * FALLBACK_STATUTORY_MULTIPLIER;
+// Source: Reserve Bank of India — Current Rates (Verified: September 2026)
+const RBI_BANK_RATE = 5.50; 
+// Source: Section 16 of the MSMED Act, 2006
+const MSME_STATUTORY_MULTIPLIER = 3.0; 
+const FALLBACK_STATUTORY_RATE = RBI_BANK_RATE * MSME_STATUTORY_MULTIPLIER;
 
 export class PersonCApiAdapter implements InterestEngine {
   
@@ -46,17 +48,21 @@ export class PersonCApiAdapter implements InterestEngine {
       // Local fallback calculation for Person B's independent testing
       const principal = data.principalAmount?.value || 0;
       const days = 45; // Deterministic test value
-      const accrued = principal * (FALLBACK_STATUTORY_RATE / 100) * (days / 365);
+      
+      // Monthly compounding (monthly rests) required by MSMED Act Section 16
+      const monthlyRate = (FALLBACK_STATUTORY_RATE / 100) / 12;
+      const monthsOverdue = days / (365 / 12);
+      const accrued = principal * Math.pow(1 + monthlyRate, monthsOverdue) - principal;
       
       return {
         daysOverdue: days,
-        bankRate: FALLBACK_RBI_RATE,
+        bankRate: RBI_BANK_RATE,
         applicableInterestRate: FALLBACK_STATUTORY_RATE,
         interestAccrued: accrued,
         totalClaimAmount: principal + accrued,
-        explanation: `Calculated via Local Fallback (Offline Mode using ${FALLBACK_RBI_RATE}% RBI rate)`,
+        explanation: `Calculated via Local Fallback (Offline Mode using ${RBI_BANK_RATE}% RBI rate)`,
         calculationMode: 'offline_fallback',
-        statutoryMultiplier: FALLBACK_STATUTORY_MULTIPLIER
+        statutoryMultiplier: MSME_STATUTORY_MULTIPLIER
       };
     }
   }
