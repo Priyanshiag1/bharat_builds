@@ -33,7 +33,7 @@ Reference: Supply of Industrial Assemblies under Invoice No. INV-2024-089 dated 
 
 We value our commercial partnership with Apex Infrastructure Ltd and appreciate the collaborative relationship built over the past years. We understand that periodic accounting audits and cash-flow adjustments can introduce administrative friction.
 
-However, as per our records, payment for the referenced invoice is currently 72 days past the statutory 45-day deadline mandated under Section 15 of the Micro, Small and Medium Enterprises Development (MSMED) Act, 2006. As of today, the compounding penal interest accrued under Section 16 (calculated at 3x the prevailing RBI Bank Rate of 6.75% = 20.25% p.a., compounded monthly) stands at INR 8,450.75, bringing the total statutory claim to INR 2,58,450.75.
+However, as per our records, payment for the referenced invoice is currently 72 days past the statutory 45-day deadline mandated under Section 15 of the Micro, Small and Medium Enterprises Development (MSMED) Act, 2006. As of today, the compounding penal interest accrued under Section 16 (calculated at 3x the prevailing RBI Bank Rate of 5.50% = 16.50% p.a., compounded monthly) stands at INR 8,450.75, bringing the total statutory claim to INR 2,58,450.75.
 
 In addition, under Section 43B(h) of the Income Tax Act, 1961 (Finance Act 2023), failure to liquidate this outstanding MSME sum within 45 days attracts mandatory disallowance of deduction, creating a direct 30% corporate tax penalty of INR 75,000.00 on your enterprise.
 
@@ -85,8 +85,8 @@ Our client duly delivered industrial assemblies against Tax Invoice No. INV-2024
 2. STATUTORY DEFAULT UNDER SECTION 15 (MSMED ACT 2006):
 No dispute was raised within 15 days of receipt. Under Section 15, credit terms are statutorily capped at 45 days. The payment is actively 72 days overdue past the statutory milestone.
 
-3. SECTION 16 STATUTORY PENAL INTEREST (20.25% p.a.):
-Section 16 mandates payment of compound interest with monthly rests at 3x the RBI Bank Rate (20.25% p.a.).
+3. SECTION 16 STATUTORY PENAL INTEREST (16.50% p.a.):
+Section 16 mandates payment of compound interest with monthly rests at 3x the RBI Bank Rate (16.50% p.a.).
   - Principal Overdue: INR 2,50,000.00
   - Accrued 3x Penal Interest: INR 8,450.75
   - Total Statutory Sum: INR 2,58,450.75

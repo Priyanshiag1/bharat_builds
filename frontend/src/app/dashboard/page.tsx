@@ -223,7 +223,7 @@ Failure to settle within 15 days triggers MSEFC Section 18 statutory arbitration
               </div>
               <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center gap-1.5 mt-3">
                 <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span>Statutory 20.25% p.a.</span>
+                <span>Statutory 16.50% p.a.</span>
               </div>
             </div>
 
