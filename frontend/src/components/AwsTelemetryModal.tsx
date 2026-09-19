@@ -68,10 +68,10 @@ export default function AwsTelemetryModal() {
                 </div>
                 <div>
                   <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
-                    Vasuli AI: AWS Cloud Architecture
+                    DhanSetu AI: AWS Serverless Architecture
                   </h3>
                   <p className="text-[11px] text-slate-400">
-                    Mandatory Rule 0: Region us-east-1 | CloudWatch Structured Telemetry (Rule 3)
+                    AWS Serverless Infrastructure • Region us-east-1 (N. Virginia)
                   </p>
                 </div>
               </div>
@@ -164,7 +164,7 @@ export default function AwsTelemetryModal() {
                 /* Telemetry Stream View */
                 <div className="space-y-2 font-mono text-xs">
                   <div className="flex items-center justify-between text-[11px] text-slate-400 pb-1">
-                    <span>Structured CloudWatch Logs (Bible Rule 3)</span>
+                    <span>Structured CloudWatch Execution Stream</span>
                     <span className="text-emerald-400">Status: Streaming Live</span>
                   </div>
                   <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2 max-h-[360px] overflow-y-auto">

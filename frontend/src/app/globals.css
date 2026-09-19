@@ -1,31 +1,58 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0f172a;
-  --surface: #1e293b;
+  --background: #080c14;
+  --surface: #111827;
   --foreground: #f8fafc;
   --accent: #ff9900;
+  --emerald-glow: rgba(16, 185, 129, 0.12);
+  --amber-glow: rgba(255, 153, 0, 0.08);
 }
 
 body {
-  background-color: #0f172a;
+  background-color: #080c14;
+  background-image: 
+    radial-gradient(ellipse 90% 40% at 50% -10%, rgba(255, 153, 0, 0.07), transparent 60%),
+    radial-gradient(ellipse 80% 50% at 90% 10%, rgba(16, 185, 129, 0.06), transparent 50%),
+    radial-gradient(ellipse 80% 50% at 10% 20%, rgba(59, 130, 246, 0.05), transparent 50%);
+  background-attachment: fixed;
   color: #f8fafc;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   min-height: 100vh;
 }
 
-/* Custom scrollbar for legal notice and document views */
+/* Custom scrollbar for legal notices and telemetry console */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #0b0f19;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 4px;
+  background: #1f293d;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #ff9900;
+}
+
+@keyframes haloPulse {
+  0%, 100% { box-shadow: 0 0 15px -3px rgba(168, 85, 247, 0.25), 0 0 6px -2px rgba(255, 153, 0, 0.2); }
+  50% { box-shadow: 0 0 30px 2px rgba(168, 85, 247, 0.4), 0 0 12px 1px rgba(255, 153, 0, 0.35); }
+}
+
+.halo-pulse {
+  animation: haloPulse 3s ease-in-out infinite;
+}
+
+@keyframes stampBounce {
+  0% { transform: scale(3) rotate(-20deg); opacity: 0; }
+  60% { transform: scale(0.95) rotate(-3deg); opacity: 1; }
+  80% { transform: scale(1.05) rotate(-5deg); }
+  100% { transform: scale(1) rotate(-5deg); opacity: 1; }
+}
+
+.stamp-seal {
+  animation: stampBounce 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }

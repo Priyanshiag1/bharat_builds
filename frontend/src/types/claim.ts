@@ -26,6 +26,11 @@ export interface ClaimData {
   settled_at?: string;
   classification_mode?: "bedrock" | "offline_fallback";
   tax_disallowance_penalty?: number;
+  sec43b_tax_disallowance?: number;
+  total_exposure?: number;
+  buyer_phone?: string;
+  buyer_email?: string;
+  dispatched_at?: string;
   tax_disallowance_rate?: number;
   is_section_43b_violated?: boolean;
   tax_disallowance_impact_summary?: string;

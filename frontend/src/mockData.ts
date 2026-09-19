@@ -97,7 +97,7 @@ TAKE NOTICE that failure to comply within 15 days will result in a formal refere
 Yours faithfully,
 
 Advocate & Statutory Legal Counsel
-Vasuli AI Automated Recovery Suite`,
+DhanSetu AI Automated Recovery Suite`,
 
   tier_3_petition: `PETITION BEFORE THE MICRO AND SMALL ENTERPRISES FACILITATION COUNCIL (MSEFC)
 Under Section 18 read with Sections 15 & 16 of the Micro, Small and Medium Enterprises Development (MSMED) Act, 2006
@@ -130,7 +130,7 @@ DATED: Current Date | ATTESTED 1-CLICK SAMADHAAN PETITION DOSSIER`
 export const sampleCases = [
   {
     id: "case-1",
-    label: "Case 1: Happy Path (INR 2.5L)",
+    label: "Apex Infrastructure (₹2.5L Overdue)",
     source: "Bharat Builds Standard",
     invNumber: "INV-2024-089",
     buyer: "Apex Infrastructure Ltd",
@@ -142,7 +142,7 @@ export const sampleCases = [
   },
   {
     id: "case-2",
-    label: "Case 2: Severe Default (INR 5.8L)",
+    label: "Zenith Mills (₹5.8L Overdue)",
     source: "Bharat Builds Escalation",
     invNumber: "INV-2024-041",
     buyer: "Zenith Mills Pvt Ltd",
@@ -154,7 +154,7 @@ export const sampleCases = [
   },
   {
     id: "case-3",
-    label: "Case 3: Missing POD Warning (INR 1.8L)",
+    label: "Metro Logistics (Missing POD)",
     source: "Bharat Builds Evidentiary Gap",
     invNumber: "INV-2024-112",
     buyer: "Metro Infra Logistics",
@@ -166,7 +166,7 @@ export const sampleCases = [
   },
   {
     id: "case-hf-1",
-    label: "HF Synthetic 1: CloudWave (INR 3.4L)",
+    label: "Acme Manufacturing (₹3.4L Overdue)",
     source: "HuggingFace: alamgirqazi/invoice-ocr-synthetic",
     invNumber: "INV-20230815-001",
     buyer: "Acme Manufacturing Co. India",
@@ -178,7 +178,7 @@ export const sampleCases = [
   },
   {
     id: "case-hf-2",
-    label: "HF Synthetic 2: PixelWave (INR 4.2L)",
+    label: "Greenfield Marketing (₹4.2L Overdue)",
     source: "HuggingFace: alamgirqazi/invoice-ocr-synthetic",
     invNumber: "INV-2023-0098",
     buyer: "Greenfield Marketing Ltd",

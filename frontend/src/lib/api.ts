@@ -90,6 +90,14 @@ export function getSettlementAgreementPdfUrl(claimId: string) {
   return `${BACKEND_URL}/api/claims/${claimId}/settlement-agreement/pdf`;
 }
 
+export function getRpadPdfUrl(claimId: string) {
+  return `${BACKEND_URL}/api/claims/${claimId}/rpad/pdf`;
+}
+
+export function getIbbiFormBPdfUrl(claimId: string) {
+  return `${BACKEND_URL}/api/claims/${claimId}/ibbi-form-b/pdf`;
+}
+
 export async function dispatchNotice(claimId: string, buyerEmail?: string, buyerPhone?: string) {
   try {
     const res = await fetch(`${BACKEND_URL}/api/claims/${claimId}/dispatch`, {
