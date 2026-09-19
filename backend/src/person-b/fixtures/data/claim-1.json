@@ -1,0 +1,41 @@
+{
+  "claimId": "claim-1",
+  "documents": [
+    {
+      "id": "doc-inv-1",
+      "type": "invoice",
+      "sourceUri": "local://fixtures/data/invoice-1.pdf",
+      "uploadedAt": "2026-09-01T10:00:00Z"
+    },
+    {
+      "id": "doc-po-1",
+      "type": "purchase_order",
+      "sourceUri": "local://fixtures/data/po-1.pdf",
+      "uploadedAt": "2026-09-01T10:05:00Z"
+    },
+    {
+      "id": "doc-chat-1",
+      "type": "buyer_communication",
+      "sourceUri": "local://fixtures/data/chat-1.txt",
+      "uploadedAt": "2026-09-15T09:00:00Z"
+    }
+  ],
+  "rawExtractionPayloads": {
+    "doc-inv-1": {
+      "VENDOR_NAME": "Bharat Precision Components Pvt Ltd",
+      "CUSTOMER_NAME": "Acme Industries India",
+      "INVOICE_RECEIPT_ID": "INV-2026-089",
+      "INVOICE_RECEIPT_DATE": "2026-06-01",
+      "DUE_DATE": "2026-07-16",
+      "TOTAL": "125000.00",
+      "VENDOR_GSTIN": "27AADCB2230M1Z2",
+      "CUSTOMER_GSTIN": "29AABCD1234E1Z5"
+    },
+    "doc-po-1": {
+      "PO_NUMBER": "PO-ACME-999"
+    }
+  },
+  "rawCommunicationPayloads": {
+    "doc-chat-1": "Hi, we received the components but our accounting department is currently facing a slight liquidity crunch due to quarter-end closing. We will release 50% of the payment next week and the rest next month. Please bear with us."
+  }
+}
