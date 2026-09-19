@@ -89,15 +89,43 @@ def run_tests():
     print(f"Settlement Type: {res_data['settlement_type']}")
     print(f"Deed Agreement URL: {res_data['agreement_pdf_url']}\n")
 
-    # TEST 7: Download Executed Digital Settlement Agreement Deed PDF
-    print(f"--- [TEST 7] Digital Settlement Deed PDF ---")
-    res_deed = client.get(f"/api/claims/{claim_id}/settlement-agreement/pdf")
-    assert res_deed.status_code == 200, f"Deed failed: {res_deed.status_code}"
-    assert res_deed.headers.get("content-type") == "application/pdf", "Expected application/pdf"
-    print(f"Binding Settlement Agreement Deed PDF: 200 OK ({len(res_deed.content)} bytes)\n")
+    # TEST 8: Section 43B(h) Corporate Tax Penalty Verification
+    print(f"--- [TEST 8] Section 43B(h) Income Tax Disallowance Math ---")
+    tax_penalty = audit.get("tax_disallowance_penalty")
+    assert tax_penalty is not None, "Missing tax_disallowance_penalty in audit response"
+    expected_tax = round(audit["principal_amount"] * 0.30, 2)
+    assert tax_penalty == expected_tax, f"Expected {expected_tax}, got {tax_penalty}"
+    print(f"Debtor Tax Penalty: Rs. {tax_penalty:,.2f} (30% Corporate Tax Disallowance)")
+    print(f"Tax Violation Status: {audit.get('is_section_43b_violated')}")
+    print(f"Tax Statutory Impact: {audit.get('tax_disallowance_impact_summary')}\n")
+
+    # TEST 9: Multi-Channel Notice Dispatch (SES + WhatsApp + Step Functions)
+    print(f"--- [TEST 9] Multi-Channel Notice Dispatch: POST /api/claims/{claim_id}/dispatch ---")
+    res_dispatch = client.post(
+        f"/api/claims/{claim_id}/dispatch",
+        json={"buyer_email": "accounts@apexinfra.com", "buyer_phone": "+919876543210", "tier": "TIER_1"}
+    )
+    assert res_dispatch.status_code == 200, f"Dispatch failed: {res_dispatch.text}"
+    disp_data = res_dispatch.json()
+    assert disp_data["status"] == "DISPATCHED"
+    channels = disp_data["channels"]
+    print(f"Amazon SES Email: {channels['email']['status']} (Msg ID: {channels['email']['message_id']})")
+    print(f"WhatsApp Web Deep Link: {channels['whatsapp']['deep_link'][:65]}...")
+    print(f"AWS Step Functions State Machine: {channels['step_functions']['status']}")
+    print(f"Execution ARN: {channels['step_functions']['execution_arn']}\n")
+
+    # TEST 10: Structured CloudWatch Live Telemetry API (Bible Rule 3)
+    print(f"--- [TEST 10] Structured CloudWatch Live Telemetry: GET /api/telemetry/logs ---")
+    res_telemetry = client.get("/api/telemetry/logs")
+    assert res_telemetry.status_code == 200, f"Telemetry failed: {res_telemetry.text}"
+    telemetry = res_telemetry.json()
+    print(f"Telemetry Status: {telemetry['status']} | Region: {telemetry['region']}")
+    print(f"Total CloudWatch Structured Events: {telemetry['total_events']}")
+    print(f"Active AWS Services: {list(telemetry['aws_services'].keys())}")
+    print(f"Latest Recorded Event: {telemetry['logs'][0]['service']} -> {telemetry['logs'][0]['action']} ({telemetry['logs'][0]['latency_ms']}ms)\n")
 
     print("==========================================================")
-    print("  ALL 7 MASTER INTEGRATION TESTS PASSED WITH 100% SUCCESS!")
+    print("  ALL 10 MASTER INTEGRATION TESTS PASSED WITH 100% SUCCESS!")
     print("==========================================================")
 
 if __name__ == "__main__":

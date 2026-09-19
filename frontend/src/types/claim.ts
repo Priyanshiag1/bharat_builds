@@ -25,6 +25,15 @@ export interface ClaimData {
   settlement_type?: "LUMP_SUM_DISCOUNT" | "EMI_PLAN";
   settled_at?: string;
   classification_mode?: "bedrock" | "offline_fallback";
+  tax_disallowance_penalty?: number;
+  tax_disallowance_rate?: number;
+  is_section_43b_violated?: boolean;
+  tax_disallowance_impact_summary?: string;
+  dispatch_channels?: {
+    email?: { recipient: string; message_id: string; status: string };
+    whatsapp?: { recipient: string; deep_link: string; status: string };
+    step_functions?: { execution_arn: string; status: string };
+  };
   component_scores?: {
     paperworkCompleteness: number;
     timeDecay: number;

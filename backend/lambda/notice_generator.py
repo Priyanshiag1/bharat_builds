@@ -159,13 +159,18 @@ def generate_legal_notice(case_data: dict, interest_data: dict, notice_tier: str
     story.append(Paragraph(body_p1, body_style))
     story.append(Spacer(1, 10))
     
+    tax_disallowance = principal * 0.30
+    
     fin_data = [
         ["Description", "Statutory Provision", "Amount (INR)"],
         ["Principal Invoice Value", f"Invoice {inv_no}", f"Rs. {principal:,.2f}"],
         ["Statutory Penal Interest Accrued", f"Section 16 @ 20.25% p.a. ({days_overdue} days)", f"Rs. {interest_accrued:,.2f}"],
         ["TOTAL STATUTORY CLAIM AS ON DATE", "Section 15 & 16 MSMED Act, 2006", f"Rs. {total_amount:,.2f}"],
-        ["Current Daily Compounding Accrual", "Section 16 Monthly Rest Increment", f"Rs. {daily_rate:,.2f} / day"]
+        ["Current Daily Compounding Accrual", "Section 16 Monthly Rest Increment", f"Rs. {daily_rate:,.2f} / day"],
     ]
+    if notice_tier == "TIER_2":
+        fin_data.append(["Mandatory Debtor Tax Penalty", "Sec 43B(h) Income Tax Act (30% Tax)", f"Rs. {tax_disallowance:,.2f}"])
+        
     fin_table = Table(fin_data, colWidths=[2.6 * inch, 2.8 * inch, 1.8 * inch])
     fin_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), primary_color),
@@ -186,6 +191,9 @@ def generate_legal_notice(case_data: dict, interest_data: dict, notice_tier: str
         closing = "<b>PAYMENT TERMS:</b> Please remit the principal via RTGS/NEFT and upload UTR acknowledgment on the online portal."
     else:
         closing = f"""
+        <b>MANDATORY TAX DISALLOWANCE NOTICE (SECTION 43B(h) OF INCOME TAX ACT, 1961):</b><br/>
+        TAKE NOTICE that pursuant to Section 43B(h) enacted under Finance Act 2023, failure to liquidate this outstanding MSME liability causes immediate disallowance of the entire expense of Rs. {principal:,.2f}, directly increasing your corporate income tax payable by <b>Rs. {tax_disallowance:,.2f}</b> (30% corporate rate plus penal interest under Sec 234B/C).
+        <br/><br/>
         <b>DEMAND FOR PAYMENT & STATUTORY CONSEQUENCES:</b><br/>
         YOU ARE HEREBY CALLED UPON to pay <b>Rs. {total_amount:,.2f}</b> within <b>15 days</b>.<br/><br/>
         <b>PLEASE NOTE</b> that upon failure, our client shall file a Reference under <b>Section 18(1)</b> before the MSEFC Council. Under <b>Section 19</b> of the MSMED Act, no court or appellate body shall entertain any appeal against an MSEFC award without you first pre-depositing <b>75% of the awarded amount</b>.

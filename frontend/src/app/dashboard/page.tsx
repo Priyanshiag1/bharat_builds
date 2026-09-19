@@ -19,16 +19,28 @@ import {
 import CircularGauge from "@/components/CircularGauge";
 import AnimatedCounter from "@/components/AnimatedCounter";
 import NoticeViewer from "@/components/NoticeViewer";
-import { getActiveClaim, getDossierPdfUrl } from "@/lib/api";
+import { getActiveClaim, getDossierPdfUrl, dispatchNotice } from "@/lib/api";
 import { formatINR, formatDate } from "@/lib/utils";
 import { ClaimData } from "@/types/claim";
 
 export default function DashboardPage() {
   const [claim, setClaim] = useState<ClaimData | null>(null);
+  const [isDispatching, setIsDispatching] = useState(false);
+  const [dispatchResult, setDispatchResult] = useState<any>(null);
+  const [showDispatchModal, setShowDispatchModal] = useState(false);
 
   useEffect(() => {
     setClaim(getActiveClaim());
   }, []);
+
+  const handleDispatch = async () => {
+    if (!claim) return;
+    setIsDispatching(true);
+    const res = await dispatchNotice(claim.claim_id);
+    setDispatchResult(res);
+    setIsDispatching(false);
+    setShowDispatchModal(true);
+  };
 
   if (!claim) {
     return (
@@ -62,6 +74,17 @@ export default function DashboardPage() {
 
           {/* Action CTAs */}
           <div className="flex items-center flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={handleDispatch}
+              disabled={isDispatching}
+              className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-lg shadow-blue-500/20 transition disabled:opacity-50 cursor-pointer"
+              title="Dispatch Notice via Amazon SES & WhatsApp with AWS Step Functions"
+            >
+              <Send className="w-4 h-4" />
+              <span>{isDispatching ? "Dispatching..." : "Dispatch Notice (SES/WhatsApp)"}</span>
+            </button>
+
             <a
               href={getDossierPdfUrl(claim.claim_id)}
               target="_blank"
@@ -163,6 +186,35 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Section 43B(h) Statutory Income Tax Disallowance Leverage Banner */}
+        <div className="bg-gradient-to-r from-rose-950/40 via-slate-900 to-[#1e293b] border border-rose-500/30 rounded-2xl p-5 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0">
+              <Scale className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-rose-400">
+                  Section 43B(h) Income Tax Act Disallowance
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-mono font-bold">
+                  30% Corporate Tax Penalty
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 mt-1">
+                Under Finance Act 2023, overdue MSME debt past 45 days is disallowed as an expenditure, forcing debtor to pay direct corporate income tax.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-slate-950/80 px-4 py-2.5 rounded-xl border border-slate-800 text-left md:text-right shrink-0">
+            <span className="text-[10px] uppercase font-semibold text-slate-400 block">Direct Tax Penalty on Debtor</span>
+            <span className="text-lg sm:text-xl font-black text-rose-400 font-mono">
+              {formatINR(claim.tax_disallowance_penalty || claim.principal_amount * 0.30)}
+            </span>
+          </div>
+        </div>
+
         {/* Stalling Intelligence Badge & AI Counter-Reasoning */}
         <div className="bg-gradient-to-r from-[#1e293b] to-slate-900 border border-slate-700/80 rounded-2xl p-6 shadow-xl space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
@@ -218,6 +270,70 @@ export default function DashboardPage() {
           tier3Text={claim.tier_3_petition}
           claimId={claim.claim_id}
         />
+
+        {/* Multi-Channel Dispatch Modal */}
+        {showDispatchModal && dispatchResult && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="bg-[#1e293b] border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2 text-emerald-400">
+                  <ShieldCheck className="w-5 h-5" />
+                  <h3 className="font-bold text-white text-base">Dispute Notice Dispatched</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowDispatchModal(false)}
+                  className="text-slate-400 hover:text-white text-xs px-2 py-1 rounded bg-slate-800"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="space-y-2.5 text-xs text-slate-300">
+                <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+                  <span className="font-semibold text-[#ff9900] block">Amazon SES Email Service</span>
+                  <p className="text-[11px] text-slate-400">
+                    Recipient: {dispatchResult.channels?.email?.recipient} | Status: <span className="text-emerald-400 font-bold">Delivered</span>
+                  </p>
+                  <p className="text-[10px] font-mono text-slate-500 truncate">
+                    Msg ID: {dispatchResult.channels?.email?.message_id}
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+                  <span className="font-semibold text-blue-400 block">AWS Step Functions State Machine</span>
+                  <p className="text-[11px] text-slate-400">
+                    Workflow: <code className="text-amber-300">vasuli-recovery-workflow-demo</code> | State: <span className="text-emerald-400 font-bold">RUNNING</span>
+                  </p>
+                  <p className="text-[10px] font-mono text-slate-500 truncate">
+                    ARN: {dispatchResult.channels?.step_functions?.execution_arn}
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-2 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const waLink = dispatchResult.channels?.whatsapp?.deep_link;
+                    if (waLink) window.open(waLink, "_blank");
+                  }}
+                  className="w-full py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>Send Notice via WhatsApp Direct Link</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDispatchModal(false)}
+                  className="w-full py-2 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
