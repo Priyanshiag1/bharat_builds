@@ -1,82 +1,115 @@
-# VASULI (VASOOL AI) — AWS INFRASTRUCTURE & DEPLOYMENT GUIDE
-### Track: Ship It (AWS Hackathon 2026) | Owned by Person C (AWS Integration)
+# VASULI (VASOOL AI) — UNIFIED FULL-STACK ARCHITECTURE & DEPLOYMENT GUIDE
+### Bharat Builds Tour Hackathon 2026 | Unified Master (Person A + Person B + Person C)
 
-This document provides complete instructions for deploying, testing, and verifying the AWS cloud architecture for **Vasuli** — the statutory delayed-payment recovery platform for Indian MSMEs under the MSMED Act, 2006.
+This repository contains the complete, production-ready implementation of **Vasuli** — the autonomous statutory delayed-payment recovery platform for Indian MSMEs operating under the **Micro, Small and Medium Enterprises Development (MSMED) Act, 2006**.
 
 ---
 
-## 1. Architecture Summary
+## 1. The 4 Completed Platform Modules
 
-| AWS Service | Resource Name / Pattern | Role in Vasuli Platform |
+| Module | Core Capabilities | Technologies & AWS Services |
 |---|---|---|
-| **Amazon S3** | `vasuli-docs-{account}-{region}` | Stores raw uploaded invoices, signed Proof of Delivery (POD) challans, and generated legal notice PDFs. |
-| **Amazon DynamoDB** | `vasuli_claims` | Primary operational state table storing MSME claims, audit calculations, and status transitions. |
-| **Amazon DynamoDB** | `vasuli_buyer_sessions` | Ephemeral state for buyer magic links with automatic TTL expiration (14 days). |
-| **Amazon DynamoDB** | `vasuli_config` | Dynamic configuration store for `RBI_BANK_RATE` (6.75%), statutory multipliers, and grace periods. |
-| **Amazon DynamoDB** | `vasuli_audit_logs` | Structured CloudWatch/DynamoDB audit trails (Bible Rule 3). |
-| **AWS Lambda** | `VasuliApiHandler` (Python 3.12) | Central serverless API router handling statutory calculations, OCR, dispute classification, and notices. |
-| **AWS Step Functions**| `vasuli-recovery-workflow-demo` | Timed escalation state machine (Tier 1 Notice → Wait Period → Status Check → Tier 2 Demand Notice → MSEFC Dossier). |
-| **Amazon API Gateway** | `VasuliRestApi` | REST API with preflight CORS enabled for Next.js frontend (`localhost:3000` & Amplify Hosting). |
+| **Module 1: Claim Intake & MSMED Compliance Audit** | Ingests multi-format claim documents (Invoice PDF, PO, Delivery Challan). Extracts Buyer/Seller GSTINs, dates, itemized amounts. Audits Section 15 45-day statutory credit cap. Computes Section 16 3x RBI bank rate compounding interest ($3 \times 6.75\% = 20.25\%$ p.a.). Detects evidentiary gaps (missing signed POD/Challan). | **Amazon Textract** (`AnalyzeExpense`), **Amazon S3** (`vasuli-docs-*`), `pypdf` local fallback, MSMED Statutory Math Engine. |
+| **Module 2: Stalling Detection & Claim Strength Engine** | Analyzes debtor communications (WhatsApp, email, letters). Detects Administrative Deflection, Phantom Disputes, and Liquidity Crises. Applies Section 15 15-day deemed acceptance bar. Computes an explainable 0–100 Claim Strength Score (40 pts Paperwork, 35 pts Time Decay, 25 pts Communication Signal). | **Amazon Bedrock** (`anthropic.claude-3-haiku-20240307-v1:0`), Local Rule-Based Legal Classifier, Explainable Scoring Engine. |
+| **Module 3: Autonomous Multi-Tier Negotiation Agent** | Escalates communication strategy across 3 calibrated tiers: **Tier 1** (Amicable offer: 5% prompt discount or 3-month EMI plan), **Tier 2** (Statutory Demand Notice citing Section 15/16 and Section 19 75% pre-deposit bar), and **Tier 3** (1-Click MSEFC Samadhaan filing arbitration dossier PDF). | **ReportLab Legal Engine**, Automated Notice Drafter, PDF Dossier Compiler. |
+| **Module 4: Interactive Buyer Settlement Portal** | Self-serve debtor resolution portal at `/resolve/[claimId]`. Allows debtor to choose between 5% prompt settlement or 3-month structured EMI plan. Triggers celebratory confetti and executes a binding Digital Settlement Agreement Deed PDF. | **Next.js 14 App Router**, `canvas-confetti`, ReportLab Agreement Generator, DynamoDB/Local Vault. |
 
 ---
 
-## 2. API Endpoints Reference
+## 2. System Architecture & End-to-End Flow
 
-Base URL (Local Lambda / Mock / API Gateway): `http://localhost:8000` or API Gateway URL.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/` | Health check, engine status, and statutory rate confirmation. |
-| `GET` | `/claims` | List all active MSME claims from DynamoDB. |
-| `POST` | `/claims` | Create or register a new MSME debt recovery claim. |
-| `GET` | `/claims/{claim_id}` | Fetch detailed claim record, interest metrics, and notices. |
-| `POST` | `/claims/{claim_id}/audit` | Execute Section 15 45-day cap & Section 16 20.25% monthly compounding calculation. |
-| `POST` | `/claims/{claim_id}/classify-excuse` | AI excuse classifier detecting late quality disputes and liquidity stalling. |
-| `POST` | `/claims/{claim_id}/generate-notice` | Generates official ReportLab legal notice PDF (Tier 1, 2, or 3) and stores in S3. |
-| `POST` | `/claims/{claim_id}/start-recovery` | Generates tamper-proof magic link token for the debtor settlement portal. |
-| `GET` | `/buyer/portal/{token}` | Serves debtor settlement view (running interest clock, 100% waiver offer). |
-| `POST` | `/buyer/portal/{token}/respond` | Debtor action: Accept 100% interest waiver, propose 3-part EMI, or upload payment UTR. |
-
----
-
-## 3. Statutory Legal Math Specifications
-
-* **Section 15 MSMED Act 2006**: Maximum agreed credit period is statutorily capped at **45 days** from delivery / deemed acceptance.
-* **Section 16 MSMED Act 2006**: Penal compound interest with **monthly rests** at **3x RBI Bank Rate**.
-* **Current RBI Bank Rate**: **6.75%** per annum.
-* **Statutory Compounding Rate**: $3 \times 6.75\% = \mathbf{20.25\%}$ per annum.
-
----
-
-## 4. Local Testing & Verification
-
-To verify that the AWS DynamoDB tables, calculation engine, and API routes are functioning correctly without deploying:
-
-```bash
-cd backend
-python test_api_flow.py
+```
+[MSME Supplier] 
+       │ (Uploads Invoice, Challan, Udyam, Debtor Chat)
+       ▼
+[Person A: Next.js 14 Frontend] (localhost:3000)
+       │  POST /api/audit (Multipart Form)
+       ▼
+[Person C: Unified FastAPI Server] (backend/server.py :8000)
+   ├── OCR: Textract AnalyzeExpense (fallback to pypdf regex)
+   ├── Math: MSMED Sec 15 (45-day cap) & Sec 16 (3x RBI compounding)
+   ├── AI Classifier: Bedrock Claude 3 Haiku (fallback to rule engine)
+   ├── Scoring: 40/35/25 Explainable Claim Strength Algorithm
+   ├── Notice Engine: ReportLab compiles Tier 1, Tier 2, Tier 3 PDFs
+   └── Vault: DynamoDB + S3 (in-memory + local vault fallback)
+       │  Returns dual-contract payload: ClaimData + ClaimAssessment
+       ▼
+[Person A: Interactive Dispute Dashboard]
+   ├── Circular Gauge (Score / 100)
+   ├── Animated 3x Interest Counter
+   ├── Multi-Tier Notice Viewer (Tier 1, 2, 3 Tabs + PDF Downloads)
+   └── "Download MSEFC Samadhaan Filing Dossier (PDF)"
+       │  Debtor receives magic link: /resolve/[claimId]
+       ▼
+[Person A: Debtor Resolution Portal]
+   ├── Option A: 5% Prompt Discount (Waives 100% statutory interest)
+   ├── Option B: 3-Month Structured EMI Plan
+   ├── Confetti Celebration Trigger
+   └── "Download Signed Settlement Agreement Deed (PDF)"
 ```
 
-Expected output:
-* `[TEST 1]` Health check returns `200 OK`.
-* `[TEST 2]` Creates claim in AWS DynamoDB table `vasuli_claims`.
-* `[TEST 3]` Computes Section 15 & 16 interest schedule.
-* `[TEST 4]` Classifies buyer excuse under Section 15 Proviso (15-day defect rule).
-* `[TEST 5]` Generates debtor magic link token and saves session.
+---
+
+## 3. Person Integration Summary
+
+1. **Person A (Frontend)**:
+   - Built modern, responsive Next.js 14 application with Dark Mode `#0f172a`, Lucide icons, Framer Motion, and Tailwind CSS.
+   - 3 interactive screens: `/intake` (drag-and-drop ingestion), `/dashboard` (claim audit and multi-tier notices), and `/resolve/[claimId]` (debtor portal).
+   - Fully connected to backend APIs with seamless offline fallback mode.
+
+2. **Person B (AI Assessment & Domain Models)**:
+   - Implemented TypeScript domain models (`ClaimAssessment`, `NormalizedClaimData`, `EvidenceGaps`).
+   - Built explainable 40/35/25 Claim Strength Scoring algorithm and stalling excuse classification.
+   - Provided `PersonCApiAdapter` with offline determinism and CLI runner.
+
+3. **Person C (AWS Backend & Infrastructure)**:
+   - Built master FastAPI server (`backend/server.py`) and serverless AWS Lambda handler (`backend/lambda/api_handler.py`).
+   - Integrated AWS Textract, Amazon S3, AWS Bedrock Claude 3 Haiku, Amazon DynamoDB, and AWS Step Functions.
+   - Built 100% non-blocking offline fallbacks (`DEMO_MODE=true`) for infallible hackathon presentations.
+   - Implemented 4 ReportLab legal document generators (Tier 1 Amicable, Tier 2 Statutory, Tier 3 MSEFC Dossier, Settlement Agreement Deed).
 
 ---
 
-## 5. One-Command AWS CDK Cloud Deployment
+## 4. How to Run Locally
 
-When ready to deploy infrastructure directly to AWS:
+### Step 1: Start the Backend Server (Python 3.12+)
+```powershell
+# In the repository root
+python -u backend/server.py
+```
+* The server starts at `http://127.0.0.1:8000`.
+* Check health: `http://127.0.0.1:8000/` returns `{"status": "online", "service": "Vasuli AWS Statutory Recovery Engine"}`.
+* Automatic Swagger API Documentation: `http://127.0.0.1:8000/docs`.
 
-```bash
+### Step 2: Run the Master Integration Test Suite
+```powershell
+python -u backend/test_unified_api.py
+```
+* Verifies all 7 integration steps (Health, Master Audit, Person B Adapter, Notice PDFs, MSEFC Dossier PDF, Settlement Resolution, Agreement Deed PDF).
+
+### Step 3: Launch the Frontend (Node.js 18+)
+```powershell
+cd frontend
+npm run dev
+```
+* Open `http://localhost:3000` in your browser.
+
+---
+
+## 5. Production AWS Cloud Deployment
+
+To deploy the entire serverless infrastructure stack to your AWS account:
+
+```powershell
 cd backend
 npx cdk bootstrap
 npx cdk deploy --all
 ```
 
-The deployment will output:
-* `ApiGatewayUrl`: Public HTTPS URL for Person A (Frontend) to configure in `.env.local` as `NEXT_PUBLIC_API_URL`.
-* `DocumentBucketOutput`: S3 Bucket name for document storage.
-* `ClaimsTableOutput`: DynamoDB claims table name.
+**AWS CDK Stack Resources Created**:
+* **S3 Bucket**: `vasuli-docs-{account}-{region}` (SSE-S3 encrypted trade vault).
+* **DynamoDB Tables**: `vasuli_claims`, `vasuli_buyer_sessions` (14-day TTL), `vasuli_config`, `vasuli_audit_logs`.
+* **Lambda Function**: `VasuliApiHandler` (Python 3.12).
+* **Step Functions**: `vasuli-recovery-workflow-demo` (Escalation state machine).
+* **API Gateway**: `VasuliRestApi` (REST API with CORS enabled).
+
