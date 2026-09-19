@@ -169,7 +169,7 @@ export default function AwsTelemetryModal() {
                   </div>
                   <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2 max-h-[360px] overflow-y-auto">
                     {logs.map((log: any, index: number) => (
-                      <div key={log.id || index} className="p-2 rounded bg-slate-900/90 border border-slate-800/80 flex flex-col gap-1">
+                      <div key={`${log.id || "evt"}-${index}`} className="p-2 rounded bg-slate-900/90 border border-slate-800/80 flex flex-col gap-1">
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-amber-400 text-[11px]">[{log.service}]</span>
                           <span className="text-[10px] text-slate-500">{log.timestamp}</span>
