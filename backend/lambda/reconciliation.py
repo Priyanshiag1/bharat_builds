@@ -142,9 +142,166 @@ def apply_commercial_reconciliation(claim: Dict) -> Dict:
                 "description": jw_res['warning']
             })
 
+    # 6. Case 1: OCR Math Checksum
+    if claim.get("subtotal") is not None and claim.get("tax_amount") is not None:
+        ocr_check = validate_ocr_math_checksum(
+            claim.get("subtotal"),
+            claim.get("tax_amount"),
+            claim.get("principal_amount", principal)
+        )
+        reconciliation_details["ocr_math_checksum"] = ocr_check
+        if ocr_check.get("requires_human_verification"):
+            evidence_gaps.append({
+                "type": "ocr_digit_hallucination_risk",
+                "description": ocr_check.get("warning")
+            })
+
+    # 7. Case 5: Vernacular UOM Conversion
+    if claim.get("uom_unit") and claim.get("quantity"):
+        uom_res = convert_vernacular_uom(float(claim.get("quantity")), claim.get("uom_unit"))
+        reconciliation_details["vernacular_uom_normalization"] = uom_res
+
+    # 8. Case 6: Staggered Batch Deliveries
+    if claim.get("staggered_batches"):
+        batch_res = calculate_staggered_batch_interest(
+            claim.get("staggered_batches"),
+            agreed_credit_days=int(claim.get("agreed_credit_days", 30))
+        )
+        reconciliation_details["staggered_batches"] = batch_res
+
     # Return results
     return {
         "adjusted_principal_amount": round(adjusted_principal, 2),
         "reconciliation_details": reconciliation_details,
         "new_evidence_gaps": evidence_gaps
+    }
+
+# --------------------------------------------------------------------------
+# Category 1: Physical Documents & Ground-Level Ingestion Helpers
+# --------------------------------------------------------------------------
+
+def validate_ocr_math_checksum(subtotal: float, tax_amount: float, grand_total: float, tolerance: float = 2.0) -> Dict[str, Any]:
+    """
+    Case 1: Faded Carbon Copies & OCR Digit Hallucinations Check.
+    Validates arithmetic checksum: (Subtotal + Tax == Grand Total).
+    Detects if OCR hallucinated or dropped digits (e.g. Rs 4,50,000 read as Rs 45,000).
+    """
+    calculated_total = round(float(subtotal) + float(tax_amount), 2)
+    difference = abs(calculated_total - float(grand_total))
+    is_valid = difference <= tolerance
+    
+    return {
+        "is_valid": is_valid,
+        "calculated_total": calculated_total,
+        "extracted_grand_total": float(grand_total),
+        "difference": round(difference, 2),
+        "requires_human_verification": not is_valid,
+        "warning": (
+            f"OCR Digit Hallucination Alert: Subtotal (Rs. {subtotal:,.2f}) + Tax (Rs. {tax_amount:,.2f}) = Rs. {calculated_total:,.2f}, "
+            f"which deviates by Rs. {difference:,.2f} from Grand Total (Rs. {grand_total:,.2f}). Please verify paper bill manually."
+            if not is_valid else None
+        )
+    }
+
+VERNACULAR_UOM_MAPPINGS = {
+    "thaan": {"standard_unit": "meter", "conversion_factor": 100.0, "category": "Textile"},
+    "than": {"standard_unit": "meter", "conversion_factor": 100.0, "category": "Textile"},
+    "bora": {"standard_unit": "kg", "conversion_factor": 50.0, "category": "Agri/Commodity"},
+    "bori": {"standard_unit": "kg", "conversion_factor": 50.0, "category": "Agri/Commodity"},
+    "sack": {"standard_unit": "kg", "conversion_factor": 50.0, "category": "Agri/Commodity"},
+    "peti": {"standard_unit": "pieces", "conversion_factor": 24.0, "category": "Packaging"},
+    "carton": {"standard_unit": "pieces", "conversion_factor": 24.0, "category": "Packaging"},
+    "nag": {"standard_unit": "pieces", "conversion_factor": 1.0, "category": "Count"},
+    "piece": {"standard_unit": "pieces", "conversion_factor": 1.0, "category": "Count"},
+    "gatta": {"standard_unit": "bundles", "conversion_factor": 10.0, "category": "Hardware/Yarn"},
+    "quintal": {"standard_unit": "kg", "conversion_factor": 100.0, "category": "Weight"},
+    "tonne": {"standard_unit": "kg", "conversion_factor": 1000.0, "category": "Weight"}
+}
+
+def convert_vernacular_uom(quantity: float, from_uom: str, to_uom: str = None) -> Dict[str, Any]:
+    """
+    Case 5: Vernacular & Local Units of Measurement (UOM Mismatch).
+    Converts local trade units (Thaan, Bora, Peti, Nag, Gatta) into standardized metric SI units.
+    """
+    clean_uom = str(from_uom).strip().lower()
+    mapping = VERNACULAR_UOM_MAPPINGS.get(clean_uom)
+    
+    if not mapping:
+        return {
+            "original_quantity": quantity,
+            "original_uom": from_uom,
+            "standardized_quantity": quantity,
+            "standardized_uom": from_uom,
+            "conversion_applied": False,
+            "matched_category": "Standard/Direct"
+        }
+        
+    std_qty = round(quantity * mapping["conversion_factor"], 2)
+    return {
+        "original_quantity": quantity,
+        "original_uom": from_uom,
+        "standardized_quantity": std_qty,
+        "standardized_uom": mapping["standard_unit"],
+        "conversion_applied": True,
+        "conversion_factor": mapping["conversion_factor"],
+        "matched_category": mapping["category"]
+    }
+
+def calculate_staggered_batch_interest(
+    batches: List[Dict[str, Any]],
+    agreed_credit_days: int = 30,
+    calculation_date_str: str = None
+) -> Dict[str, Any]:
+    """
+    Case 6: Staggered Batch Deliveries on Single Consolidated Invoice.
+    Under Section 15 of MSMED Act, the 45-day timer starts on the delivery date of EACH batch,
+    not the later consolidated tax invoice date!
+    """
+    from datetime import datetime, date, timedelta
+    calc_date = datetime.strptime(calculation_date_str, "%Y-%m-%d").date() if calculation_date_str else date.today()
+    capped_credit_days = min(agreed_credit_days, 45)
+    
+    total_principal = 0.0
+    total_accrued_interest = 0.0
+    batch_results = []
+    
+    # Section 16 penal compounding rate: 16.50% p.a.
+    penal_rate = 16.50
+    monthly_rate = (penal_rate / 100.0) / 12.0
+    
+    for b in batches:
+        amount = float(b.get("amount", 0.0))
+        del_date_str = b.get("delivery_date", calc_date.isoformat())
+        del_date = datetime.strptime(del_date_str, "%Y-%m-%d").date()
+        statutory_due_date = del_date + timedelta(days=capped_credit_days)
+        
+        days_overdue = max(0, (calc_date - statutory_due_date).days)
+        
+        # Monthly compounding
+        months_overdue = days_overdue / 30.4375
+        if days_overdue > 0:
+            compound_factor = ((1 + monthly_rate) ** months_overdue) - 1
+            batch_interest = round(amount * compound_factor, 2)
+        else:
+            batch_interest = 0.0
+            
+        total_principal += amount
+        total_accrued_interest += batch_interest
+        
+        batch_results.append({
+            "batch_id": b.get("batch_id", f"Batch-{len(batch_results)+1}"),
+            "delivery_date": del_date_str,
+            "statutory_due_date": statutory_due_date.isoformat(),
+            "batch_amount": amount,
+            "days_overdue": days_overdue,
+            "batch_interest": batch_interest,
+            "challan_number": b.get("challan_number", "DC-TRUCK-LR")
+        })
+        
+    return {
+        "total_principal": round(total_principal, 2),
+        "total_accrued_interest": round(total_accrued_interest, 2),
+        "total_claimable": round(total_principal + total_accrued_interest, 2),
+        "batches": batch_results,
+        "statutory_basis": "Section 15 & 16 MSMED Act: Independent appointed day clocks per physical dispatch."
     }
