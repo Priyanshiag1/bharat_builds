@@ -3,7 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 
 export const metadata: Metadata = {
-  title: "Vasuli AI — Autonomous MSMED Delayed Payment Recovery & Resolution",
+  title: "DhanSetu AI — Autonomous MSMED Delayed Payment Recovery & Resolution",
   description:
     "Statutory Section 15 & 16 MSMED Act 2006 engine with Amazon Textract OCR, 3x Penal Compounding Interest calculator, and autonomous multi-tier settlement agent.",
 };

@@ -20,15 +20,20 @@ export interface ClaimData {
   counter_reasoning?: string;
   tier_1_letter: string;
   tier_2_notice: string;
+  tier_3_petition?: string;
   status: "AUDITED" | "NOTICE_SENT" | "SETTLED";
   settlement_type?: "LUMP_SUM_DISCOUNT" | "EMI_PLAN";
   settled_at?: string;
   classification_mode?: "bedrock" | "offline_fallback";
+  tax_disallowance_penalty?: number;
   sec43b_tax_disallowance?: number;
   total_exposure?: number;
   buyer_phone?: string;
   buyer_email?: string;
   dispatched_at?: string;
+  tax_disallowance_rate?: number;
+  is_section_43b_violated?: boolean;
+  tax_disallowance_impact_summary?: string;
   dispatch_channels?: {
     email?: { recipient: string; message_id: string; status: string };
     whatsapp?: { recipient: string; deep_link: string; status: string };

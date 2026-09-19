@@ -1,12 +1,12 @@
 import { ClaimData } from "@/types/claim";
-import { mockClaim, structuredTelemetryLogs } from "@/mockData";
+import { mockClaim } from "@/mockData";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 export async function auditClaim(formData: FormData): Promise<ClaimData> {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
 
     const res = await fetch(`${BACKEND_URL}/api/audit`, {
       method: "POST",
@@ -62,6 +62,73 @@ export function updateClaimStatus(claimId: string, status: "SETTLED" | "NOTICE_S
   return updated;
 }
 
+export async function resolveClaimOnBackend(claimId: string, settlementType: "LUMP_SUM_DISCOUNT" | "EMI_PLAN") {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/claims/${claimId}/resolve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ settlement_type: settlementType }),
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (e) {
+    console.warn("Could not reach backend resolution endpoint:", e);
+  }
+  return null;
+}
+
+export function getNoticePdfUrl(claimId: string, tier: "tier1" | "tier2") {
+  return `${BACKEND_URL}/api/claims/${claimId}/notices/${tier}/pdf`;
+}
+
+export function getDossierPdfUrl(claimId: string) {
+  return `${BACKEND_URL}/api/claims/${claimId}/dossier/pdf`;
+}
+
+export function getSettlementAgreementPdfUrl(claimId: string) {
+  return `${BACKEND_URL}/api/claims/${claimId}/settlement-agreement/pdf`;
+}
+
+export async function dispatchNotice(claimId: string, buyerEmail?: string, buyerPhone?: string) {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/claims/${claimId}/dispatch`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ buyer_email: buyerEmail, buyer_phone: buyerPhone }),
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (e) {
+    console.warn("Could not dispatch notice via backend API:", e);
+  }
+  // Fallback demo response
+  return {
+    status: "DISPATCHED",
+    claim_id: claimId,
+    token: `magic-${claimId}-demo`,
+    portal_url: `http://localhost:3000/resolve/${claimId}`,
+    channels: {
+      email: { recipient: buyerEmail || "accounts@apexinfra.com", message_id: "ses-msg-demo-2026", status: "SENT" },
+      whatsapp: { recipient: buyerPhone || "+919876543210", deep_link: `https://wa.me/919876543210?text=Dispute%20Settlement`, status: "READY" },
+      step_functions: { execution_arn: `arn:aws:states:us-east-1:123456789012:execution:vasuli-demo:${claimId}`, status: "RUNNING" }
+    }
+  };
+}
+
+export async function getTelemetryLogs() {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/telemetry/logs`);
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (e) {
+    console.warn("Telemetry API unreachable, using cached telemetry:", e);
+  }
+  return null;
+}
+
 export function mapClaimAssessmentToClaimData(assessment: any, fallback: ClaimData = mockClaim): ClaimData {
   if (!assessment) return fallback;
   const norm = assessment.normalizedData || {};
@@ -89,62 +156,4 @@ export function mapClaimAssessmentToClaimData(assessment: any, fallback: ClaimDa
     classification_mode: reply?.classificationMode || "bedrock",
     component_scores: strength?.componentScores,
   };
-}
-export async function dispatchNotice(claimId: string, channel: "email" | "whatsapp" = "email"): Promise<{
-  success: boolean;
-  message_id?: string;
-  execution_arn?: string;
-  status: string;
-}> {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-    const res = await fetch(`${BACKEND_URL}/api/claims/${claimId}/dispatch`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ channel }),
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-
-    if (res.ok) {
-      return await res.json();
-    }
-  } catch (err) {
-    console.warn("Backend dispatch unreachable, using simulated dispatch response:", err);
-  }
-
-  return {
-    success: true,
-    message_id: `ses-msg-${claimId}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
-    execution_arn: `arn:aws:states:us-east-1:123456789012:execution:vasuli-recovery-workflow-demo:${claimId}-${Date.now().toString().slice(-6)}`,
-    status: "DELIVERED",
-  };
-}
-
-export async function fetchTelemetryLogs(): Promise<any[]> {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-    const res = await fetch(`${BACKEND_URL}/api/telemetry/logs`, {
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        return data;
-      }
-      if (data.logs && Array.isArray(data.logs)) {
-        return data.logs;
-      }
-    }
-  } catch (err) {
-    console.warn("Backend telemetry unreachable, using structured telemetry logs:", err);
-  }
-
-  return structuredTelemetryLogs;
 }

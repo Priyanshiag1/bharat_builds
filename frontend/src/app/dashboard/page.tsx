@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import {
   ShieldCheck,
@@ -24,6 +24,7 @@ import {
   Flame,
   AlertTriangle,
   ArrowUpRight,
+  Sliders,
 } from "lucide-react";
 import CircularGauge from "@/components/CircularGauge";
 import AnimatedCounter from "@/components/AnimatedCounter";
@@ -44,9 +45,15 @@ export default function DashboardPage() {
   } | null>(null);
   const [waDispatched, setWaDispatched] = useState(false);
 
+  // ⭐ The Killer Interactive Feature: Time-Decay Penalty Slider (Default 72 days)
+  const [simulatedDays, setSimulatedDays] = useState<number>(72);
+
   useEffect(() => {
     const active = getActiveClaim();
     setClaim(active);
+    if (active.days_overdue) {
+      setSimulatedDays(active.days_overdue);
+    }
     if (active.dispatch_channels?.email) {
       setSesDispatchResult({
         message_id: active.dispatch_channels.email.message_id,
@@ -57,9 +64,22 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // Recalculate Section 16 compounding interest dynamically based on the slider:
+  // Statutory rate: 16.50% p.a. (3x 5.50% RBI Bank Rate), compounded monthly
+  const dynamicInterest = useMemo(() => {
+    if (!claim) return 8450.75;
+    const principal = claim.principal_amount || 250000;
+    const annualRate = 0.165; // 16.50%
+    const monthlyRate = annualRate / 12;
+    const months = simulatedDays / 30.0;
+    // A = P * (1 + r/12)^months - P
+    const interest = principal * (Math.pow(1 + monthlyRate, months) - 1);
+    return Math.round(interest * 100) / 100;
+  }, [claim, simulatedDays]);
+
   if (!claim) {
     return (
-      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center text-slate-400 font-medium">
+      <div className="min-h-screen bg-[#080c14] flex items-center justify-center text-slate-400 font-medium">
         Loading Dispute Analytics...
       </div>
     );
@@ -70,7 +90,7 @@ export default function DashboardPage() {
     : `http://localhost:3000/resolve/${claim.claim_id}`;
 
   const sec43bTaxPenalty = claim.sec43b_tax_disallowance || Math.round(claim.principal_amount * 0.3);
-  const totalDebtorExposure = claim.total_exposure || (claim.principal_amount + claim.accrued_interest + sec43bTaxPenalty);
+  const totalDebtorExposure = claim.principal_amount + dynamicInterest + sec43bTaxPenalty;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(resolvePortalUrl);
@@ -101,25 +121,23 @@ To: ${claim.buyer_name}
 GSTIN: ${claim.buyer_gstin}
 
 Ref: Invoice #${claim.invoice_number}
-Status: 72 Days Overdue (Past 45-day legal cap)
+Status: ${simulatedDays} Days Overdue (Past 45-day legal cap)
 Principal Overdue: INR ${claim.principal_amount.toLocaleString("en-IN")}
-Sec 16 Penal Interest (3x RBI): INR ${claim.accrued_interest.toLocaleString("en-IN")}
-Sec 43B(h) Tax Disallowance Penalty: INR ${sec43bTaxPenalty.toLocaleString("en-IN")}
-TOTAL DEBTOR EXPOSURE: INR ${totalDebtorExposure.toLocaleString("en-IN")}
+Sec 16 Penal Interest (16.50% p.a.): INR ${Math.round(dynamicInterest).toLocaleString("en-IN")}
+Sec 43B(h) Corporate Tax Penalty: INR ${sec43bTaxPenalty.toLocaleString("en-IN")}
+TOTAL DEBTOR EXPOSURE: INR ${Math.round(totalDebtorExposure).toLocaleString("en-IN")}
 
-You may execute immediate settlement with a 5% penalty waiver or select a 3-month EMI plan here:
-${resolvePortalUrl}
-
-Failure to settle within 15 days triggers MSEFC Section 18 statutory arbitration.`;
+Execute immediate settlement with 5% waiver or select a 3-month EMI plan:
+${resolvePortalUrl}`;
 
   const waDeepLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waMessage)}`;
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen text-slate-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Top Header Card */}
-        <div className="bg-[#1e293b] border border-slate-700/80 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-[#111827]/90 backdrop-blur border border-slate-700/80 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-3 flex-wrap">
               <span className="text-2xl sm:text-3xl font-black text-white tracking-tight">
@@ -128,7 +146,7 @@ Failure to settle within 15 days triggers MSEFC Section 18 statutory arbitration
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider">
                 <ShieldCheck className="w-3.5 h-3.5" /> MSMED Act Protection Active
               </span>
-              <span className="text-xs text-slate-400 font-mono px-2.5 py-0.5 rounded bg-slate-900 border border-slate-800">
+              <span className="text-xs text-slate-400 font-mono px-2.5 py-0.5 rounded bg-slate-950 border border-slate-800">
                 Inv #{claim.invoice_number}
               </span>
             </div>
@@ -141,32 +159,90 @@ Failure to settle within 15 days triggers MSEFC Section 18 statutory arbitration
           <div className="flex items-center gap-3">
             <Link
               href={`/resolve/${claim.claim_id}`}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#ff9900] to-amber-500 hover:brightness-110 text-slate-950 text-sm font-bold flex items-center gap-2 shadow-lg shadow-[#ff9900]/20 transition group"
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#ff9900] via-amber-500 to-emerald-400 hover:brightness-110 text-slate-950 text-sm font-black flex items-center gap-2 shadow-lg shadow-[#ff9900]/20 transition group"
             >
-              <span>Preview Buyer Portal</span>
+              <span>Preview Debtor Portal</span>
               <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
+          </div>
+        </div>
+
+        {/* ⭐ THE SHOWSTOPPER: Interactive Time-Decay Penalty Slider */}
+        <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-[#111827] to-slate-900 border border-amber-500/30 p-5 sm:p-6 shadow-xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-[#ff9900]/10 border border-[#ff9900]/30 flex items-center justify-center text-[#ff9900]">
+                <Sliders className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-2">
+                  <span>Interactive Default Escalation Simulator</span>
+                  <span className="text-[10px] bg-[#ff9900]/20 text-[#ff9900] px-2 py-0.5 rounded-full font-mono uppercase font-bold">
+                    Touch &amp; Slide
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Simulate compounding statutory penalty growth as debtor continues to stall past 45 days.
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-2xl font-black text-[#ff9900] font-mono">{simulatedDays} Days</span>
+              <span className="text-[11px] text-slate-400 block font-medium">Overdue Default Period</span>
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            <input
+              type="range"
+              min={45}
+              max={180}
+              step={1}
+              value={simulatedDays}
+              onChange={(e) => setSimulatedDays(Number(e.target.value))}
+              className="w-full h-2.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-[#ff9900]"
+            />
+            <div className="flex justify-between text-[11px] font-mono font-bold text-slate-400">
+              <span className={simulatedDays === 45 ? "text-white" : ""}>45d (Statutory Milestone)</span>
+              <span className={simulatedDays >= 70 && simulatedDays <= 75 ? "text-[#ff9900]" : ""}>72d (Current Default)</span>
+              <span className={simulatedDays >= 90 && simulatedDays <= 95 ? "text-amber-400" : ""}>90d (Quarterly Audit)</span>
+              <span className={simulatedDays === 180 ? "text-rose-400" : ""}>180d (MSEFC Reference)</span>
+            </div>
           </div>
         </div>
 
         {/* Top Analytics Row: Circular Gauge & 4 Metric Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Circular Gauge Card */}
-          <div className="bg-[#1e293b] border border-slate-700/80 rounded-2xl p-6 shadow-xl flex flex-col items-center justify-center text-center">
+          <div className="bg-[#111827]/90 backdrop-blur border border-slate-700/80 rounded-2xl p-6 shadow-xl flex flex-col items-center justify-center text-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-radial from-emerald-500/5 to-transparent pointer-events-none" />
             <div className="w-full flex items-center justify-between text-xs text-slate-400 font-semibold mb-2">
               <span>LEGAL AUDIT</span>
-              <span className="text-[#ff9900]">MSMED Sec 15/16</span>
+              <span className="text-[#ff9900] font-mono">MSMED Sec 15/16</span>
             </div>
             <CircularGauge score={claim.claim_strength_score} size={160} />
-            <p className="text-[11px] text-slate-400 mt-4 leading-tight">
-              Calculated from POD authenticity, statutory grace period expiration, and stalling excuse patterns.
-            </p>
+            
+            {/* Component breakdown pills */}
+            <div className="w-full mt-4 pt-3 border-t border-slate-800 text-[10px] font-mono text-slate-300 space-y-1">
+              <div className="flex justify-between">
+                <span>Paperwork Authenticity:</span>
+                <span className="text-emerald-400 font-bold">40/40</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Time Decay Factor:</span>
+                <span className="text-amber-400 font-bold">5/35</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Excuse Legitimacy:</span>
+                <span className="text-purple-400 font-bold">22/25</span>
+              </div>
+            </div>
           </div>
 
           {/* 4 Financial & Tax Cards */}
           <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             {/* Metric 1: Principal Amount */}
-            <div className="bg-[#1e293b] border border-slate-700/80 rounded-2xl p-5 shadow-xl flex flex-col justify-between relative overflow-hidden group">
+            <div className="bg-[#111827]/90 backdrop-blur border border-slate-700/80 rounded-2xl p-5 shadow-xl flex flex-col justify-between relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Coins className="w-14 h-14 text-[#ff9900]" />
               </div>
@@ -180,12 +256,12 @@ Failure to settle within 15 days triggers MSEFC Section 18 statutory arbitration
               </div>
               <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center gap-1.5 mt-3">
                 <FileCheck2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Inv Date: {formatDate(claim.invoice_date)}</span>
+                <span>Inv: {formatDate(claim.invoice_date)}</span>
               </div>
             </div>
 
             {/* Metric 2: Days Overdue */}
-            <div className="bg-[#1e293b] border border-slate-700/80 rounded-2xl p-5 shadow-xl flex flex-col justify-between relative overflow-hidden group">
+            <div className="bg-[#111827]/90 backdrop-blur border border-slate-700/80 rounded-2xl p-5 shadow-xl flex flex-col justify-between relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Clock className="w-14 h-14 text-rose-500" />
               </div>
@@ -194,7 +270,7 @@ Failure to settle within 15 days triggers MSEFC Section 18 statutory arbitration
                   <AlertOctagon className="w-3.5 h-3.5" /> Days Overdue
                 </span>
                 <div className="text-xl sm:text-2xl font-black text-rose-400 tracking-tight mt-2">
-                  {claim.days_overdue} Days
+                  {simulatedDays} Days
                 </div>
               </div>
               <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center gap-1.5 mt-3">
@@ -204,7 +280,7 @@ Failure to settle within 15 days triggers MSEFC Section 18 statutory arbitration
             </div>
 
             {/* Metric 3: Accrued 3x Penal Interest */}
-            <div className="bg-[#1e293b] border border-slate-700/80 rounded-2xl p-5 shadow-xl flex flex-col justify-between relative overflow-hidden border-amber-500/30 group">
+            <div className="bg-[#111827]/90 backdrop-blur border border-amber-500/30 rounded-2xl p-5 shadow-xl flex flex-col justify-between relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Coins className="w-14 h-14 text-amber-400" />
               </div>
@@ -218,7 +294,7 @@ Failure to settle within 15 days triggers MSEFC Section 18 statutory arbitration
                   </span>
                 </div>
                 <div className="text-xl sm:text-2xl font-black text-amber-400 tracking-tight mt-2">
-                  <AnimatedCounter value={claim.accrued_interest} />
+                  <AnimatedCounter value={dynamicInterest} />
                 </div>
               </div>
               <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center gap-1.5 mt-3">
@@ -228,7 +304,7 @@ Failure to settle within 15 days triggers MSEFC Section 18 statutory arbitration
             </div>
 
             {/* Metric 4: Section 43B(h) Corporate Tax Penalty */}
-            <div className="bg-gradient-to-br from-purple-950/40 via-[#1e293b] to-slate-900 border border-purple-500/40 rounded-2xl p-5 shadow-xl flex flex-col justify-between relative overflow-hidden group">
+            <div className="halo-pulse bg-gradient-to-br from-purple-950/40 via-[#111827] to-slate-900 border border-purple-500/50 rounded-2xl p-5 shadow-xl flex flex-col justify-between relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-3 opacity-15 group-hover:opacity-25 transition-opacity">
                 <Flame className="w-14 h-14 text-purple-400" />
               </div>
@@ -283,8 +359,8 @@ Failure to settle within 15 days triggers MSEFC Section 18 statutory arbitration
                   <span className="font-mono font-bold text-white">{formatINR(claim.principal_amount)}</span>
                 </div>
                 <div className="flex justify-between text-amber-300">
-                  <span>Sec 16 Interest (3x):</span>
-                  <span className="font-mono font-bold">{formatINR(claim.accrued_interest)}</span>
+                  <span>Sec 16 Interest (16.50%):</span>
+                  <span className="font-mono font-bold">{formatINR(dynamicInterest)}</span>
                 </div>
                 <div className="flex justify-between text-purple-300">
                   <span>Sec 43B(h) Tax Hit (30%):</span>
@@ -300,7 +376,7 @@ Failure to settle within 15 days triggers MSEFC Section 18 statutory arbitration
         </div>
 
         {/* Multi-Channel Debtor Dispatch Panel */}
-        <div className="bg-[#1e293b] border border-slate-700/80 rounded-2xl p-6 shadow-xl space-y-5">
+        <div className="bg-[#111827]/90 backdrop-blur border border-slate-700/80 rounded-2xl p-6 shadow-xl space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div>
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -314,7 +390,7 @@ Failure to settle within 15 days triggers MSEFC Section 18 statutory arbitration
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono px-3 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300">
+              <span className="text-xs font-mono px-3 py-1 rounded bg-slate-950 border border-slate-800 text-slate-300">
                 Debtor: {buyerPhone} | {claim.buyer_email || "accounts@apexinfra.com"}
               </span>
             </div>
@@ -322,7 +398,7 @@ Failure to settle within 15 days triggers MSEFC Section 18 statutory arbitration
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Channel 1: WhatsApp Web Deep Link */}
-            <div className="bg-slate-950/60 border border-emerald-500/30 rounded-xl p-4 flex flex-col justify-between space-y-4">
+            <div className="bg-slate-950/70 border border-emerald-500/30 rounded-xl p-4 flex flex-col justify-between space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -358,7 +434,7 @@ Failure to settle within 15 days triggers MSEFC Section 18 statutory arbitration
             </div>
 
             {/* Channel 2: Amazon SES & Step Functions */}
-            <div className="bg-slate-950/60 border border-[#ff9900]/30 rounded-xl p-4 flex flex-col justify-between space-y-4">
+            <div className="bg-slate-950/70 border border-[#ff9900]/30 rounded-xl p-4 flex flex-col justify-between space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -404,7 +480,7 @@ Failure to settle within 15 days triggers MSEFC Section 18 statutory arbitration
           <div className="pt-2 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2 text-slate-400">
               <span className="font-semibold text-slate-300">Debtor Magic Resolution URL:</span>
-              <span className="font-mono text-slate-400 truncate max-w-xs sm:max-w-md bg-slate-900 px-2 py-1 rounded border border-slate-800">
+              <span className="font-mono text-slate-400 truncate max-w-xs sm:max-w-md bg-slate-950 px-2 py-1 rounded border border-slate-800">
                 {resolvePortalUrl}
               </span>
             </div>
@@ -430,7 +506,7 @@ Failure to settle within 15 days triggers MSEFC Section 18 statutory arbitration
         </div>
 
         {/* Stalling Intelligence Badge & AI Counter-Reasoning */}
-        <div className="bg-gradient-to-r from-[#1e293b] to-slate-900 border border-slate-700/80 rounded-2xl p-6 shadow-xl space-y-4">
+        <div className="bg-gradient-to-r from-[#111827] to-slate-900 border border-slate-700/80 rounded-2xl p-6 shadow-xl space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
@@ -460,7 +536,7 @@ Failure to settle within 15 days triggers MSEFC Section 18 statutory arbitration
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
-            <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+            <div className="bg-slate-950/70 p-4 rounded-xl border border-slate-800">
               <span className="font-semibold text-slate-400 block mb-1">Debtor Communication Snippet:</span>
               <p className="italic text-slate-300">
                 &ldquo;{claim.stalling_message_snippet || "Sir our quarterly statutory audit is ongoing..."}&rdquo;

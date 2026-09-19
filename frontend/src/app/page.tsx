@@ -58,7 +58,7 @@ export default function HomePage() {
                 <FileSpreadsheet className="w-6 h-6" />
               </div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#ff9900]">
-                Module 1
+                Document Audit Engine
               </span>
               <h2 className="text-xl font-bold text-white mt-1 group-hover:text-[#ff9900] transition-colors">
                 Claim Intake & MSMED Compliance Audit
@@ -83,7 +83,7 @@ export default function HomePage() {
                 <Activity className="w-6 h-6" />
               </div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
-                Module 2 & 3
+                Dispute Analytics
               </span>
               <h2 className="text-xl font-bold text-white mt-1 group-hover:text-emerald-400 transition-colors">
                 Dispute Analytics & Notice Generator
@@ -103,15 +103,15 @@ export default function HomePage() {
             href="/resolve/CLM-9082"
             className="group bg-[#1e293b] border-2 border-emerald-500/40 hover:border-emerald-400 rounded-2xl p-6 shadow-xl flex flex-col justify-between transition-all hover:-translate-y-1 relative overflow-hidden"
           >
-            <div className="absolute top-0 right-0 bg-[#ff9900] text-slate-950 font-black text-[9px] uppercase px-3 py-1 rounded-bl-lg">
-              The Showstopper
+            <div className="absolute top-0 right-0 bg-emerald-500/20 text-emerald-400 border-b border-l border-emerald-500/30 font-bold text-[10px] uppercase px-3 py-1 rounded-bl-lg">
+              1-Click Settlement
             </div>
             <div>
               <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 mb-5 group-hover:scale-110 transition-transform">
                 <Handshake className="w-6 h-6" />
               </div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-blue-400">
-                Module 4
+                Debtor Resolution
               </span>
               <h2 className="text-xl font-bold text-white mt-1 group-hover:text-blue-300 transition-colors">
                 Buyer Settlement Portal
@@ -125,22 +125,6 @@ export default function HomePage() {
               <ArrowRight className="w-4 h-4 text-blue-400 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
-        </div>
-
-        {/* Statutory MSMED Act Reference Footer Card */}
-        <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-slate-400">
-          <div className="flex items-center gap-3">
-            <Scale className="w-5 h-5 text-[#ff9900] shrink-0" />
-            <div>
-              <span className="font-bold text-slate-200">MSMED Act 2006 Statutory Rulebook: </span>
-              Section 15 mandates payment within max 45 days. Section 16 penalizes defaults at 3x the RBI Bank Rate compounding monthly. Section 19 mandates 75% pre-deposit for appeals.
-            </div>
-          </div>
-          <div className="shrink-0 flex items-center gap-2">
-            <span className="px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[11px]">
-              Branch: feature/frontend-ui
-            </span>
-          </div>
         </div>
       </div>
     </div>
