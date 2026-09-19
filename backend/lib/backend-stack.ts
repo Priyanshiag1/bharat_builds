@@ -84,7 +84,7 @@ export class BackendStack extends cdk.Stack {
       CONFIG_TABLE: configTable.tableName,
       AUDIT_LOGS_TABLE: auditLogsTable.tableName,
       DEMO_MODE: demoMode ? 'true' : 'false',
-      RBI_BANK_RATE: '6.75',
+      RBI_BANK_RATE: '5.50',
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
     };
 
@@ -254,6 +254,48 @@ export class BackendStack extends cdk.Stack {
     // /buyer/portal/{token}/respond
     const buyerRespond = buyerPortal.addResource('respond');
     buyerRespond.addMethod('POST', lambdaIntegration);
+
+    // /claims/{claim_id}/notices/{tier}/pdf
+    const notices = singleClaim.addResource('notices');
+    const noticeTier = notices.addResource('{tier}');
+    const noticePdf = noticeTier.addResource('pdf');
+    noticePdf.addMethod('GET', lambdaIntegration);
+
+    // /claims/{claim_id}/dossier/pdf
+    const dossier = singleClaim.addResource('dossier');
+    const dossierPdf = dossier.addResource('pdf');
+    dossierPdf.addMethod('GET', lambdaIntegration);
+
+    // /claims/{claim_id}/settlement-agreement/pdf
+    const settlementAgreement = singleClaim.addResource('settlement-agreement');
+    const agreementPdf = settlementAgreement.addResource('pdf');
+    agreementPdf.addMethod('GET', lambdaIntegration);
+
+    // /claims/{claim_id}/dispatch
+    const dispatch = singleClaim.addResource('dispatch');
+    dispatch.addMethod('POST', lambdaIntegration);
+
+    // /claims/{claim_id}/resolve
+    const resolve = singleClaim.addResource('resolve');
+    resolve.addMethod('GET', lambdaIntegration);
+    resolve.addMethod('POST', lambdaIntegration);
+
+    // /resolve/{claim_id} (Direct Buyer Resolution Route)
+    const resolveDirect = api.root.addResource('resolve').addResource('{claim_id}');
+    resolveDirect.addMethod('GET', lambdaIntegration);
+    resolveDirect.addMethod('POST', lambdaIntegration);
+
+    // /telemetry/logs
+    const telemetry = api.root.addResource('telemetry');
+    const telemetryLogs = telemetry.addResource('logs');
+    telemetryLogs.addMethod('GET', lambdaIntegration);
+
+    // /api/{proxy+} - Catch-all proxy for Person A frontend routes (/api/audit, /api/claims/...)
+    const apiProxy = api.root.addResource('api');
+    apiProxy.addProxy({
+      defaultIntegration: lambdaIntegration,
+      anyMethod: true,
+    });
 
     // Health check at /
     api.root.addMethod('GET', lambdaIntegration);

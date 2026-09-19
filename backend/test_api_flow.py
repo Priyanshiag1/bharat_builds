@@ -48,7 +48,7 @@ print(f"Status Code: {res_create['statusCode']}")
 print(f"Response: {res_create['body']}\n")
 
 # TEST 3: Statutory Legal Audit (POST /claims/{claim_id}/audit)
-# Computes Section 15 45-day cap & Section 16 20.25% compounding interest
+# Computes Section 15 45-day cap & Section 16 16.50% compounding interest
 print("--- [TEST 3] Testing Statutory Legal Audit: POST /claims/VASULI-2024-DEMO-001/audit ---")
 event_audit = {
     "httpMethod": "POST",

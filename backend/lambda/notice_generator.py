@@ -136,7 +136,7 @@ def generate_legal_notice(case_data: dict, interest_data: dict, notice_tier: str
         We refer to Invoice No. <b>{inv_no}</b> dated <b>{inv_date}</b> for <b>Rs. {principal:,.2f}</b> towards goods supplied and accepted under Proof of Delivery. 
         As per Section 15 of the MSMED Act, 2006, the maximum permissible credit period is capped at 45 days. The said payment is overdue by <b>{days_overdue} days</b>.
         <br/><br/>
-        Under Section 16 of the MSMED Act, compound interest with monthly rests at 3 times the RBI Bank Rate (currently <b>20.25% p.a.</b>) has accrued in the amount of <b>Rs. {interest_accrued:,.2f}</b>, increasing by <b>Rs. {daily_rate:,.2f} daily</b>.
+        Under Section 16 of the MSMED Act, compound interest with monthly rests at 3 times the RBI Bank Rate (currently <b>16.50% p.a.</b> based on 5.50% RBI rate) has accrued in the amount of <b>Rs. {interest_accrued:,.2f}</b>, increasing by <b>Rs. {daily_rate:,.2f} daily</b>.
         <br/><br/>
         <b>AMICABLE SETTLEMENT OFFER:</b> In the spirit of preserving our business relationship, we hereby offer you a <b>100% waiver</b> of all statutory interest accrued to date, conditional upon full principal payment of <b>Rs. {principal:,.2f}</b> within <b>5 (Five) business days</b>.
         <br/><br/>
@@ -152,7 +152,7 @@ def generate_legal_notice(case_data: dict, interest_data: dict, notice_tier: str
         <br/><br/>
         2. Pursuant to the Proviso to Section 15 of MSMED Act 2006, any defect objection was required to be communicated within 15 days of delivery. No objection was received. By law, goods stand deemed accepted unconditionally.
         <br/><br/>
-        3. Under Section 16 of MSMED Act 2006, you are mandatorily liable to pay compound interest with monthly rests at <b>20.25% per annum</b> (3x RBI Bank Rate).
+        3. Under Section 16 of MSMED Act 2006, you are mandatorily liable to pay compound interest with monthly rests at <b>16.50% per annum</b> (3x RBI Bank Rate of 5.50%).
         <br/><br/>
         4. The total statutory debt payable by you as on date is computed hereunder:
         """
@@ -164,7 +164,7 @@ def generate_legal_notice(case_data: dict, interest_data: dict, notice_tier: str
     fin_data = [
         ["Description", "Statutory Provision", "Amount (INR)"],
         ["Principal Invoice Value", f"Invoice {inv_no}", f"Rs. {principal:,.2f}"],
-        ["Statutory Penal Interest Accrued", f"Section 16 @ 20.25% p.a. ({days_overdue} days)", f"Rs. {interest_accrued:,.2f}"],
+        ["Statutory Penal Interest Accrued", f"Section 16 @ 16.50% p.a. ({days_overdue} days)", f"Rs. {interest_accrued:,.2f}"],
         ["TOTAL STATUTORY CLAIM AS ON DATE", "Section 15 & 16 MSMED Act, 2006", f"Rs. {total_amount:,.2f}"],
         ["Current Daily Compounding Accrual", "Section 16 Monthly Rest Increment", f"Rs. {daily_rate:,.2f} / day"],
     ]
@@ -294,7 +294,7 @@ def generate_tier3_samadhaan_dossier(case_data: dict, interest_data: dict) -> di
     int_tbl_data = [
         ["Claim Component", "Statutory Rate / Rule", "Amount (INR)"],
         ["Principal Debt", "Section 15 MSMED Act", f"Rs. {principal:,.2f}"],
-        ["Compounded Penal Interest", "Section 16 (20.25% p.a. monthly rests)", f"Rs. {interest:,.2f}"],
+        ["Compounded Penal Interest", "Section 16 (16.50% p.a. monthly rests)", f"Rs. {interest:,.2f}"],
         ["Total Recoverable Claim", "Award Claimed by Petitioner", f"Rs. {total:,.2f}"],
         ["Continuous Daily Accrual", "Section 16 ongoing penalty", f"Rs. {interest_data.get('daily_compounding_rate_rupees', 218.90):,.2f} / day"]
     ]
@@ -336,7 +336,7 @@ def generate_tier3_samadhaan_dossier(case_data: dict, interest_data: dict) -> di
     prayer = f"""
     The Petitioner prays that this Hon'ble Council be pleased to:<br/>
     (a) Direct the Respondent to pay the principal sum of <b>Rs. {principal:,.2f}</b>;<br/>
-    (b) Award compounded penal interest with monthly rests at 3x RBI Bank Rate (<b>20.25% p.a.</b>) amounting to <b>Rs. {interest:,.2f}</b> till date of payment;<br/>
+    (b) Award compounded penal interest with monthly rests at 3x RBI Bank Rate (<b>16.50% p.a.</b>) amounting to <b>Rs. {interest:,.2f}</b> till date of payment;<br/>
     (c) Award full legal costs and arbitration expenses incurred by the Petitioner.
     """
     story.append(Paragraph(prayer, body))
@@ -427,7 +427,7 @@ def generate_settlement_agreement(claim_data: dict, settlement_type: str = "3_PA
     story.append(Spacer(1, 12))
     
     default_clause = """
-    <b>2. DEFAULT ACCELERATION CLAUSE:</b> In the event the Debtor fails to credit any of the installments on or before the due date, the statutory interest waiver shall stand revoked with immediate effect. The entire principal plus statutory compound interest at 20.25% p.a. from the original due date shall become immediately due and recoverable through the MSEFC Council without further notice.
+    <b>2. DEFAULT ACCELERATION CLAUSE:</b> In the event the Debtor fails to credit any of the installments on or before the due date, the statutory interest waiver shall stand revoked with immediate effect. The entire principal plus statutory compound interest at 16.50% p.a. from the original due date shall become immediately due and recoverable through the MSEFC Council without further notice.
     """
     story.append(Paragraph(default_clause, body))
     story.append(Spacer(1, 15))

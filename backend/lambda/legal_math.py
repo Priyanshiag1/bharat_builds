@@ -3,10 +3,10 @@ from datetime import datetime, date, timedelta
 from decimal import Decimal
 
 # RBI Bank Rate (Sept 2026). Per Project Bible Non-Negotiable 4:
-# Configurable, defaulting to 6.75%.
-RBI_BANK_RATE = float(os.getenv("RBI_BANK_RATE", "6.75"))
+# Configurable, defaulting to 5.50% (Sept 2026).
+RBI_BANK_RATE = float(os.getenv("RBI_BANK_RATE", "5.50"))
 PENAL_RATE_MULTIPLIER = 3.0  # Mandated by Section 16 MSMED Act 2006
-STATUTORY_PENAL_RATE = RBI_BANK_RATE * PENAL_RATE_MULTIPLIER # 20.25% p.a.
+STATUTORY_PENAL_RATE = RBI_BANK_RATE * PENAL_RATE_MULTIPLIER # 16.50% p.a.
 MAX_CREDIT_PERIOD_DAYS = 45  # Mandated by Section 15 MSMED Act 2006
 
 def calculate_msme_penal_interest(

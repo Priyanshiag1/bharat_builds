@@ -119,7 +119,7 @@ Analyze this excuse and return ONLY a valid JSON object with the following keys:
         category = "LIQUIDITY_STALLING"
         label = "Third-Party Liquidity Stalling"
         vuln = "Section 16 MSMED Act Non-Obstante Clause: Third-party client delays or back-to-back payment dependencies are statutorily invalid against MSME suppliers."
-        counter = f"Section 16 of MSMED Act 2006 explicitly overrides any third-party payment dependency. The buyer is personally liable for compounding interest at 20.25% p.a. (currently accruing at Rs. {daily_interest_rate:,.2f}/day) regardless of when their client clears payment."
+        counter = f"Section 16 of MSMED Act 2006 explicitly overrides any third-party payment dependency. The buyer is personally liable for compounding interest at 16.50% p.a. (currently accruing at Rs. {daily_interest_rate:,.2f}/day) regardless of when their client clears payment."
         score = 25
         rec = "TIER_1_AMICABLE" if days_since_delivery < 60 else "TIER_2_STATUTORY_NOTICE"
         summary = f"Send Tier-1 Amicable Offer with 5-day grace to waive interest of Rs. {daily_interest_rate*15:,.0f}. Inform them that waiting adds Rs. {daily_interest_rate*7:,.0f}/week."
@@ -139,7 +139,7 @@ Analyze this excuse and return ONLY a valid JSON object with the following keys:
         category = "WILFUL_EVASION"
         label = "Unsubstantiated Stalling / Wilful Default"
         vuln = "Section 16 & 17 MSMED Act: Wilful non-payment triggers mandatory monthly compounding interest and MSEFC recovery proceedings."
-        counter = f"The buyer has failed to provide a valid statutory justification for non-payment. Full principal of Rs. {principal_amount:,.2f} plus statutory compound interest at 20.25% p.a. is immediately recoverable through the MSEFC Samadhaan portal."
+        counter = f"The buyer has failed to provide a valid statutory justification for non-payment. Full principal of Rs. {principal_amount:,.2f} plus statutory compound interest at 16.50% p.a. is immediately recoverable through the MSEFC Samadhaan portal."
         score = 10
         rec = "TIER_2_STATUTORY_NOTICE"
         summary = "Issue Formal Statutory Demand Notice immediately, giving 15 days before MSEFC Samadhaan arbitration filing."

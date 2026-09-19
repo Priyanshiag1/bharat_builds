@@ -25,7 +25,9 @@ from api_handler import (
     calculate_interest,
     RBI_BANK_RATE,
     STATUTORY_PENAL_RATE,
-    DEMO_MODE
+    DEMO_MODE,
+    STRUCTURED_TELEMETRY_LOGS,
+    log_telemetry_event
 )
 from legal_math import calculate_msme_penal_interest
 from textract_service import extract_invoice_data
@@ -55,54 +57,6 @@ STORAGE_DIR = os.path.join(os.path.dirname(__file__), "storage")
 os.makedirs(STORAGE_DIR, exist_ok=True)
 
 # --------------------------------------------------------------------------
-# Structured CloudWatch Live Telemetry Store (Rule 3 Compliance)
-# --------------------------------------------------------------------------
-STRUCTURED_TELEMETRY_LOGS = [
-    {
-        "id": "evt-init-001",
-        "timestamp": datetime.now().isoformat(),
-        "service": "Amazon DynamoDB",
-        "action": "DESCRIBE_TABLE",
-        "status": "HEALTHY",
-        "latency_ms": 14,
-        "details": {"table_name": "vasuli_claims", "billing_mode": "PAY_PER_REQUEST"}
-    },
-    {
-        "id": "evt-init-002",
-        "timestamp": datetime.now().isoformat(),
-        "service": "Amazon S3",
-        "action": "HEAD_BUCKET",
-        "status": "HEALTHY",
-        "latency_ms": 22,
-        "details": {"bucket": "vasuli-docs-trade-vault", "encryption": "AES256"}
-    },
-    {
-        "id": "evt-init-003",
-        "timestamp": datetime.now().isoformat(),
-        "service": "Amazon Bedrock",
-        "action": "GET_FOUNDATION_MODEL",
-        "status": "HEALTHY",
-        "latency_ms": 48,
-        "details": {"model_id": "anthropic.claude-3-haiku-20240307-v1:0", "region": "us-east-1"}
-    }
-]
-
-def log_telemetry_event(service: str, action: str, latency_ms: int, status: str = "SUCCESS", details: dict = None):
-    entry = {
-        "id": f"evt-{int(time.time() * 1000)}",
-        "timestamp": datetime.now().isoformat(),
-        "service": service,
-        "action": action,
-        "status": status,
-        "latency_ms": latency_ms,
-        "details": details or {}
-    }
-    STRUCTURED_TELEMETRY_LOGS.insert(0, entry)
-    if len(STRUCTURED_TELEMETRY_LOGS) > 100:
-        STRUCTURED_TELEMETRY_LOGS.pop()
-    return entry
-
-# --------------------------------------------------------------------------
 # MODULE 1 & 2: Master Intake, Legal Audit & Stalling Assessment
 # --------------------------------------------------------------------------
 @app.post("/api/audit")
@@ -121,7 +75,7 @@ async def audit_claim_endpoint(
     Master MSMED Claim Audit Route (Person A Frontend + Person B AI Assessment + Person C Engine).
     1. Ingests invoice document bytes -> Amazon Textract OCR extraction (with local parser fallback).
     2. Ingests delivery challan -> flags Section 15 Evidentiary Weakness if POD missing.
-    3. Computes Section 15 45-day cap & Section 16 monthly compounding interest at 3x RBI rate (20.25%).
+    3. Computes Section 15 45-day cap & Section 16 monthly compounding interest at 3x RBI rate (16.50%).
     4. Evaluates buyer excuse via Amazon Bedrock Claude 3 Haiku (with Section 15 deemed-acceptance rule).
     5. Computes 40/35/25 Claim Strength Score with explainability breakdown.
     6. Drafts Tier 1 Amicable Offer, Tier 2 Statutory Notice, and Tier 3 MSEFC Dossier.

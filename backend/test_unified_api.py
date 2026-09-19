@@ -57,8 +57,10 @@ def run_tests():
     assert res_adapter.status_code == 200, f"Person B adapter failed: {res_adapter.text}"
     adapter_data = res_adapter.json()
     assert "audit" in adapter_data, "Missing audit in adapter response"
+    stat_rate = adapter_data['audit']['statutory_penal_rate']
+    assert stat_rate == 16.50, f"Expected 16.50% statutory penal rate (3x 5.50%), got {stat_rate}"
     print(f"Person B Adapter Days Overdue: {adapter_data['audit']['days_overdue']}")
-    print(f"Statutory Penal Rate: {adapter_data['audit']['statutory_penal_rate']}% p.a.")
+    print(f"Statutory Penal Rate: {stat_rate}% p.a. (Verified 3x 5.50% RBI Bank Rate)")
     print(f"Interest Accrued: Rs. {adapter_data['audit']['interest_accrued']:,.2f}\n")
 
     # TEST 4: Tier 1 & Tier 2 Notice PDF Generation
@@ -89,8 +91,8 @@ def run_tests():
     print(f"Settlement Type: {res_data['settlement_type']}")
     print(f"Deed Agreement URL: {res_data['agreement_pdf_url']}\n")
 
-    # TEST 8: Section 43B(h) Corporate Tax Penalty Verification
-    print(f"--- [TEST 8] Section 43B(h) Income Tax Disallowance Math ---")
+    # TEST 7: Section 43B(h) Corporate Tax Penalty Verification
+    print(f"--- [TEST 7] Section 43B(h) Income Tax Disallowance Math ---")
     tax_penalty = audit.get("tax_disallowance_penalty")
     assert tax_penalty is not None, "Missing tax_disallowance_penalty in audit response"
     expected_tax = round(audit["principal_amount"] * 0.30, 2)
@@ -99,8 +101,8 @@ def run_tests():
     print(f"Tax Violation Status: {audit.get('is_section_43b_violated')}")
     print(f"Tax Statutory Impact: {audit.get('tax_disallowance_impact_summary')}\n")
 
-    # TEST 9: Multi-Channel Notice Dispatch (SES + WhatsApp + Step Functions)
-    print(f"--- [TEST 9] Multi-Channel Notice Dispatch: POST /api/claims/{claim_id}/dispatch ---")
+    # TEST 8: Multi-Channel Notice Dispatch (SES + WhatsApp + Step Functions)
+    print(f"--- [TEST 8] Multi-Channel Notice Dispatch: POST /api/claims/{claim_id}/dispatch ---")
     res_dispatch = client.post(
         f"/api/claims/{claim_id}/dispatch",
         json={"buyer_email": "accounts@apexinfra.com", "buyer_phone": "+919876543210", "tier": "TIER_1"}
@@ -114,8 +116,8 @@ def run_tests():
     print(f"AWS Step Functions State Machine: {channels['step_functions']['status']}")
     print(f"Execution ARN: {channels['step_functions']['execution_arn']}\n")
 
-    # TEST 10: Structured CloudWatch Live Telemetry API (Bible Rule 3)
-    print(f"--- [TEST 10] Structured CloudWatch Live Telemetry: GET /api/telemetry/logs ---")
+    # TEST 9: Structured CloudWatch Live Telemetry API (Bible Rule 3)
+    print(f"--- [TEST 9] Structured CloudWatch Live Telemetry: GET /api/telemetry/logs ---")
     res_telemetry = client.get("/api/telemetry/logs")
     assert res_telemetry.status_code == 200, f"Telemetry failed: {res_telemetry.text}"
     telemetry = res_telemetry.json()
@@ -124,8 +126,71 @@ def run_tests():
     print(f"Active AWS Services: {list(telemetry['aws_services'].keys())}")
     print(f"Latest Recorded Event: {telemetry['logs'][0]['service']} -> {telemetry['logs'][0]['action']} ({telemetry['logs'][0]['latency_ms']}ms)\n")
 
+    # TEST 10: Direct AWS Lambda Handler Parity Verification
+    print(f"--- [TEST 10] Direct AWS Lambda Handler Parity (API Gateway Simulation) ---")
+    from api_handler import lambda_handler
+
+    # 10a: Lambda PDF Generation Route (302 Redirect)
+    lambda_pdf_event = {
+        "httpMethod": "GET",
+        "path": f"/claims/{claim_id}/notices/tier1/pdf",
+        "pathParameters": {"claim_id": claim_id, "tier": "tier1"}
+    }
+    l_pdf_res = lambda_handler(lambda_pdf_event, None)
+    assert l_pdf_res["statusCode"] == 302, f"Expected 302 redirect for PDF, got {l_pdf_res['statusCode']}"
+    assert "Location" in l_pdf_res["headers"], "Missing Location header in 302 response"
+    print(f"AWS Lambda Notice PDF (302 Redirect): Location = {l_pdf_res['headers']['Location'][:65]}...")
+
+    # 10b: Lambda Dossier PDF Route
+    lambda_dossier_event = {
+        "httpMethod": "GET",
+        "path": f"/claims/{claim_id}/dossier/pdf",
+        "pathParameters": {"claim_id": claim_id}
+    }
+    l_dossier_res = lambda_handler(lambda_dossier_event, None)
+    assert l_dossier_res["statusCode"] == 302, f"Expected 302 for dossier, got {l_dossier_res['statusCode']}"
+    print(f"AWS Lambda Dossier PDF (302 Redirect): Location = {l_dossier_res['headers']['Location'][:65]}...")
+
+    # 10c: Lambda Multi-Channel Dispatch Route
+    lambda_disp_event = {
+        "httpMethod": "POST",
+        "path": f"/claims/{claim_id}/dispatch",
+        "pathParameters": {"claim_id": claim_id},
+        "body": json.dumps({"buyer_email": "accounts@apexinfra.com", "buyer_phone": "+919876543210"})
+    }
+    l_disp_res = lambda_handler(lambda_disp_event, None)
+    assert l_disp_res["statusCode"] == 200, f"Expected 200 for dispatch, got {l_disp_res['statusCode']}"
+    disp_body = json.loads(l_disp_res["body"])
+    assert disp_body["status"] == "DISPATCHED"
+    print(f"AWS Lambda Multi-Channel Dispatch: status = {disp_body['status']} | channels = {list(disp_body['channels'].keys())}")
+
+    # 10d: Lambda Buyer Portal Direct Resolution Route (/resolve/{claim_id})
+    lambda_res_event = {
+        "httpMethod": "POST",
+        "path": f"/resolve/{claim_id}",
+        "pathParameters": {"claim_id": claim_id},
+        "body": json.dumps({"settlement_type": "LUMP_SUM_DISCOUNT"})
+    }
+    l_res_res = lambda_handler(lambda_res_event, None)
+    assert l_res_res["statusCode"] == 200, f"Expected 200 for resolution, got {l_res_res['statusCode']}"
+    res_body = json.loads(l_res_res["body"])
+    assert res_body["new_status"] == "SETTLED"
+    assert "agreement_pdf_url" in res_body
+    print(f"AWS Lambda Buyer Portal Resolve: status = {res_body['new_status']} | agreement_url = {res_body['agreement_pdf_url'][:50]}...")
+
+    # 10e: Lambda Telemetry Route (/telemetry/logs)
+    lambda_tel_event = {
+        "httpMethod": "GET",
+        "path": "/telemetry/logs"
+    }
+    l_tel_res = lambda_handler(lambda_tel_event, None)
+    assert l_tel_res["statusCode"] == 200, f"Expected 200 for telemetry, got {l_tel_res['statusCode']}"
+    tel_body = json.loads(l_tel_res["body"])
+    assert tel_body["status"] == "online"
+    print(f"AWS Lambda Telemetry API: online | total events = {tel_body['total_events']}\n")
+
     print("==========================================================")
-    print("  ALL 10 MASTER INTEGRATION TESTS PASSED WITH 100% SUCCESS!")
+    print("  ALL 10 MASTER INTEGRATION & LAMBDA PARITY TESTS PASSED 100%!")
     print("==========================================================")
 
 if __name__ == "__main__":

@@ -155,7 +155,7 @@ export default function AwsTelemetryModal() {
                       Invoices aligned with <code className="text-emerald-300 bg-slate-900 px-1 py-0.5 rounded text-[11px]">alamgirqazi/invoice-ocr-synthetic</code> for Amazon Textract OCR extraction, testing Section 15 default thresholds and Section 16 3x compounding interest.
                     </p>
                     <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-400 pt-0.5">
-                      <span>- RBI Benchmark: 6.75% (3x statutory = 20.25%)</span>
+                      <span>- RBI Benchmark: 5.50% (3x statutory = 16.50%)</span>
                       <span>- Section 43B(h) Corporate Tax Disallowance: 30% Penalty</span>
                     </div>
                   </div>

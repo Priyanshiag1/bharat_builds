@@ -9,7 +9,7 @@ export interface InterestEngine {
  * Provides a seamless local fallback so Person B can test offline without AWS credentials.
  * 
  * CONFIGURATION:
- * Person C's API uses: RBI_RATE = 6.75% (DynamoDB backed)
+ * Person C's API uses: RBI_RATE = 5.50% (DynamoDB backed, 16.50% statutory rate)
  * Local Fallback uses deterministic offline fallback.
  */
 // Source: Reserve Bank of India — Current Rates (Verified: September 2026)

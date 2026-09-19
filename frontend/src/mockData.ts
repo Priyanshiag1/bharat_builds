@@ -33,7 +33,7 @@ Reference: Supply of Industrial Assemblies under Invoice No. INV-2024-089 dated 
 
 We value our commercial partnership with Apex Infrastructure Ltd and appreciate the collaborative relationship built over the past years. We understand that periodic accounting audits and cash-flow adjustments can introduce administrative friction.
 
-However, as per our records, payment for the referenced invoice is currently 72 days past the statutory 45-day deadline mandated under Section 15 of the Micro, Small and Medium Enterprises Development (MSMED) Act, 2006. As of today, the compounding penal interest accrued under Section 16 (calculated at 3x the prevailing RBI Bank Rate of 6.75% = 20.25% p.a., compounded monthly) stands at INR 8,450.75, bringing the total statutory claim to INR 2,58,450.75.
+However, as per our records, payment for the referenced invoice is currently 72 days past the statutory 45-day deadline mandated under Section 15 of the Micro, Small and Medium Enterprises Development (MSMED) Act, 2006. As of today, the compounding penal interest accrued under Section 16 (calculated at 3x the prevailing RBI Bank Rate of 5.50% = 16.50% p.a., compounded monthly) stands at INR 8,450.75, bringing the total statutory claim to INR 2,58,450.75.
 
 In the spirit of preserving our mutual business goodwill and reaching an amicable resolution without formal statutory escalation to the Micro and Small Enterprises Facilitation Council (MSEFC), we are pleased to extend two simplified settlement pathways:
 
@@ -84,7 +84,7 @@ Our client duly delivered industrial materials and supplies against Tax Invoice 
 No dispute regarding specifications, quality, or shortages was communicated to our client within the statutory fifteen (15) day period from delivery date. By virtue of the proviso to Section 2(b) and Section 15 of the MSMED Act, 2006, the goods stand deemed accepted without demur. In terms of Section 15, the maximum allowable credit period is statutorily capped at forty-five (45) days. Your company has committed an active statutory default, with payment remaining delinquent for 72 days past the statutory deadline.
 
 3. MANDATORY STATUTORY LIABILITY UNDER SECTION 16:
-Section 16 of the MSMED Act, 2006 stipulates that compound interest with monthly rests is payable at three times the RBI bank rate (20.25% p.a.).
+Section 16 of the MSMED Act, 2006 stipulates that compound interest with monthly rests is payable at three times the RBI bank rate (16.50% p.a.).
   - Principal Sum Overdue: INR 2,50,000.00
   - Accrued Penal Interest as of Date: INR 8,450.75
   - Total Statutory Sum Payable: INR 2,58,450.75
@@ -117,7 +117,7 @@ FACTS OF DISPUTE:
 
 COMPUTATION OF STATUTORY CLAIM UNDER SECTION 16:
 - Principal Sum Overdue: INR 2,50,000.00
-- Statutory Compound Interest (3x RBI Bank Rate = 20.25% compounded monthly): INR 8,450.75
+- Statutory Compound Interest (3x RBI Bank Rate = 16.50% compounded monthly): INR 8,450.75
 - Total Claimable Amount: INR 2,58,450.75
 
 PRAYER:
