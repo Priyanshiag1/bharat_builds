@@ -10,15 +10,19 @@ export const mockClaim: ClaimData = {
   seller_gstin: "27AAACW1234F1Z5",
   buyer_gstin: "07AAAAA0000A1Z5",
   buyer_name: "Apex Infrastructure Ltd",
+  buyer_phone: "+91 98765 43210",
+  buyer_email: "accounts@apexinfra.com",
   has_signed_pod: true,
   days_overdue: 72,
   statutory_due_date: "2024-06-13",
   is_section_15_violated: true,
   accrued_interest: 8450.75,
   total_claimable_amount: 258450.75,
+  sec43b_tax_disallowance: 75000, // 30% Corporate Tax Disallowance under Section 43B(h)
+  total_exposure: 333450.75,      // Principal (2.5L) + Sec 16 Interest (8.45K) + Sec 43B(h) Penalty (75K)
   claim_strength_score: 88,
   stalling_category: "Administrative Deflection",
-  counter_reasoning: "Buyer claims internal audit delay. Under Section 15 of the MSMED Act 2006, payment credit terms are legally capped at 45 days regardless of buyer internal audits. Goods were accepted on 2024-05-14 with signed POD and zero objection raised within the statutory 15-day defect notification window (Section 15 deemed-acceptance).",
+  counter_reasoning: "Buyer claims internal audit delay. Under Section 15 of MSMED Act 2006, payment credit terms are legally capped at 45 days regardless of buyer internal audits. Goods were accepted on 2024-05-14 with signed POD and zero objection raised within the statutory 15-day defect notification window (Section 15 deemed-acceptance).",
   stalling_message_snippet: "Sir our quarterly statutory audit is ongoing, director is traveling. Payment will be released once accounts department completes verification.",
   status: "AUDITED",
   tier_1_letter: `Subject: Amicable Settlement Proposal - Invoice INV-2024-089 | Apex Infrastructure Ltd
@@ -30,6 +34,8 @@ Reference: Supply of Industrial Assemblies under Invoice No. INV-2024-089 dated 
 We value our commercial partnership with Apex Infrastructure Ltd and appreciate the collaborative relationship built over the past years. We understand that periodic accounting audits and cash-flow adjustments can introduce administrative friction.
 
 However, as per our records, payment for the referenced invoice is currently 72 days past the statutory 45-day deadline mandated under Section 15 of the Micro, Small and Medium Enterprises Development (MSMED) Act, 2006. As of today, the compounding penal interest accrued under Section 16 (calculated at 3x the prevailing RBI Bank Rate of 6.75% = 20.25% p.a., compounded monthly) stands at INR 8,450.75, bringing the total statutory claim to INR 2,58,450.75.
+
+In addition, under Section 43B(h) of the Income Tax Act, 1961 (Finance Act 2023), failure to liquidate this outstanding MSME sum within 45 days attracts mandatory disallowance of deduction, creating a direct 30% corporate tax penalty of INR 75,000.00 on your enterprise.
 
 In the spirit of preserving our mutual business goodwill and reaching an amicable resolution without formal statutory escalation to the Micro and Small Enterprises Facilitation Council (MSEFC), we are pleased to extend two simplified settlement pathways:
 
@@ -51,14 +57,14 @@ Authorized Vendor Representative
 Registered MSME: UDYAM-MH-01-0012345`,
 
   tier_2_notice: `FORMAL STATUTORY DEMAND NOTICE
-UNDER SECTIONS 15 & 16 OF THE MICRO, SMALL AND MEDIUM ENTERPRISES DEVELOPMENT (MSMED) ACT, 2006
+UNDER SECTIONS 15 & 16 OF MSMED ACT, 2006 & SECTION 43B(h) OF THE INCOME TAX ACT, 1961
 
-REGISTERED DEMAND & LEGAL INTROSPECTION
+REGISTERED STATUTORY DEMAND & LEGAL NOTICE
 Date: Current Date
 Claim Reference: CLM-9082 / INV-2024-089
 
 TO:
-The Board of Directors & Managing Authority
+The Board of Directors & Chief Financial Officer
 Apex Infrastructure Ltd
 GSTIN: 07AAAAA0000A1Z5
 
@@ -67,33 +73,34 @@ Authorized Legal Counsel
 On behalf of: Registered MSME Supplier (Udyam: UDYAM-MH-01-0012345)
 GSTIN: 27AAACW1234F1Z5
 
-SUBJECT: FORMAL DEMAND FOR PAYMENT OF OUTSTANDING PRINCIPAL DEBT OF INR 2,50,000.00 ALONG WITH MANDATORY COMPOUND STATUTORY INTEREST UNDER SECTION 16 OF THE MSMED ACT, 2006.
+SUBJECT: FORMAL DEMAND FOR IMMEDIATE DISCHARGE OF OVERDUE PRINCIPAL (INR 2,50,000.00), STATUTORY 3X PENAL COMPOUND INTEREST (INR 8,450.75), AND NOTICE OF MANDATORY SECTION 43B(h) CORPORATE TAX DISALLOWANCE PENALTY (INR 75,000.00).
 
 SIR/MADAM,
 
-Under instructions from and on behalf of our client, we hereby issue this Statutory Demand Notice regarding unpaid commercial supplies:
+Under instructions from and on behalf of our client, we hereby serve this Formal Statutory Notice:
 
 1. SUPPLY AND ACCEPTANCE OF GOODS:
-Our client duly delivered industrial materials and supplies against Tax Invoice No. INV-2024-089 dated 10-May-2024 for a principal amount of INR 2,50,000.00. Physical delivery of the consignment was received and formally acknowledged by your authorized representative on 14-May-2024 via signed Delivery Challan.
+Our client duly delivered industrial assemblies against Tax Invoice No. INV-2024-089 dated 10-May-2024 for a principal amount of INR 2,50,000.00. Physical delivery of the consignment was received and formally acknowledged by your authorized representative on 14-May-2024 via signed Delivery Challan.
 
-2. STATUTORY BREACH UNDER SECTION 15:
-No dispute regarding specifications, quality, or shortages was communicated to our client within the statutory fifteen (15) day period from delivery date. By virtue of the proviso to Section 2(b) and Section 15 of the MSMED Act, 2006, the goods stand deemed accepted without demur. In terms of Section 15, the maximum allowable credit period is statutorily capped at forty-five (45) days. Your company has committed an active statutory default, with payment remaining delinquent for 72 days past the statutory deadline.
+2. STATUTORY DEFAULT UNDER SECTION 15 (MSMED ACT 2006):
+No dispute was raised within 15 days of receipt. Under Section 15, credit terms are statutorily capped at 45 days. The payment is actively 72 days overdue past the statutory milestone.
 
-3. MANDATORY STATUTORY LIABILITY UNDER SECTION 16:
-Section 16 of the MSMED Act, 2006 stipulates that compound interest with monthly rests is payable at three times the RBI bank rate (20.25% p.a.).
-  - Principal Sum Overdue: INR 2,50,000.00
-  - Accrued Penal Interest as of Date: INR 8,450.75
-  - Total Statutory Sum Payable: INR 2,58,450.75
+3. SECTION 16 STATUTORY PENAL INTEREST (20.25% p.a.):
+Section 16 mandates payment of compound interest with monthly rests at 3x the RBI Bank Rate (20.25% p.a.).
+  - Principal Overdue: INR 2,50,000.00
+  - Accrued 3x Penal Interest: INR 8,450.75
+  - Total Statutory Sum: INR 2,58,450.75
 
-4. DEMAND AND FIFTEEN (15) DAY NOTICE PERIOD:
-You are hereby called upon to remit the full statutory amount of INR 2,58,450.75 within FIFTEEN (15) DAYS from receipt of this notice, or execute an authorized settlement agreement at http://localhost:3000/resolve/CLM-9082.
+4. CRITICAL: SECTION 43B(h) INCOME TAX DISALLOWANCE PENALTY:
+TAKE NOTE that under Section 43B(h) of the Income Tax Act, 1961, introduced via Finance Act 2023, amounts due to registered MSMEs beyond 45 days stand MANDATORILY DISALLOWED as deductible business expenditure for your financial year. This triggers a direct, non-appealable corporate income tax penalty of 30% (INR 75,000.00) on your enterprise, bringing your total financial exposure to INR 3,33,450.75.
 
-TAKE NOTICE that failure to comply within 15 days will result in a formal reference under Section 18 to the Micro and Small Enterprises Facilitation Council (MSEFC) via MSME Samadhaan. Under Section 19, no appeal can be entertained without pre-depositing 75% of the decreed amount.
+5. 15-DAY CURE PERIOD & MSEFC ARBITRATION:
+You are hereby called upon to liquidate the outstanding debt within FIFTEEN (15) DAYS, or execute an authorized digital settlement deed at http://localhost:3000/resolve/CLM-9082. Failure to comply will result in an immediate Section 18 reference before the Micro and Small Enterprises Facilitation Council (MSEFC). Under Section 19 of the Act, no court or appellate tribunal shall entertain any appeal without mandatory prior deposit of 75% of the decreed award.
 
 Yours faithfully,
 
-Advocate & Statutory Legal Counsel
-Vasuli AI Automated Recovery Suite`
+Statutory Legal Counsel
+Vasuli Automated MSME Legal Recovery Suite`
 };
 
 export const sampleCases = [
@@ -170,13 +177,13 @@ export const awsServiceStatuses = [
   {
     name: "Amazon S3",
     badge: "Encrypted Trade Vault",
-    role: "Bucket: vasuli-trade-vault-2026 (SSE-S3 enabled)",
+    role: "Bucket: vasuli-docs-vault (SSE-S3 enabled)",
     status: "Configured",
     region: "us-east-1"
   },
   {
     name: "Amazon Bedrock",
-    badge: "Claude 3.5 Sonnet",
+    badge: "Claude 3 Haiku",
     role: "Legal reasoning, stalling classifier & dual-tier notice drafter",
     status: "Access Granted",
     region: "us-east-1"
@@ -184,8 +191,15 @@ export const awsServiceStatuses = [
   {
     name: "Amazon DynamoDB",
     badge: "Claim Ledger",
-    role: "Table: VasuliClaims (Tracks AUDITED, NOTICE_SENT, SETTLED)",
+    role: "Table: vasuli_claims (Tracks AUDITED, NOTICE_SENT, SETTLED)",
     status: "Connected",
+    region: "us-east-1"
+  },
+  {
+    name: "AWS Step Functions",
+    badge: "Dispute Orchestrator",
+    role: "Workflow: vasuli-recovery-workflow-demo (Multi-day cure period machine)",
+    status: "Running",
     region: "us-east-1"
   },
   {
@@ -194,5 +208,43 @@ export const awsServiceStatuses = [
     role: "Dispatches debtor magic links and dispute notices via email",
     status: "Standby",
     region: "us-east-1"
+  }
+];
+
+export const structuredTelemetryLogs = [
+  {
+    service: "Amazon Textract",
+    action: "EXTRACT_EXPENSE_SUCCESS",
+    latency_ms: 320,
+    status: "SUCCESS",
+    details: { invoice: "INV-2024-089", fields_extracted: 14, confidence: 0.98 }
+  },
+  {
+    service: "Amazon Bedrock",
+    action: "EXCUSE_CLASSIFIED",
+    latency_ms: 640,
+    status: "SUCCESS",
+    details: { model: "anthropic.claude-3-haiku", category: "Administrative Deflection", confidence: 0.94 }
+  },
+  {
+    service: "Amazon DynamoDB",
+    action: "CLAIM_AUDIT_COMMITTED",
+    latency_ms: 12,
+    status: "COMMITTED",
+    details: { table: "vasuli_claims", claim_id: "CLM-9082", status: "AUDITED" }
+  },
+  {
+    service: "AWS Step Functions",
+    action: "START_EXECUTION",
+    latency_ms: 45,
+    status: "RUNNING",
+    details: { state_machine: "vasuli-recovery-workflow-demo", state: "SendTier1Notice" }
+  },
+  {
+    service: "Amazon SES",
+    action: "SEND_DISPUTE_NOTICE_EMAIL",
+    latency_ms: 175,
+    status: "DELIVERED",
+    details: { recipient: "accounts@apexinfra.com", template: "MSMED_TIER1_OFFER" }
   }
 ];
