@@ -48,6 +48,11 @@ from notice_generator import (
     generate_rpad_postal_dispatch_slip,
     generate_ibbi_form_b
 )
+try:
+    from reconciliation import apply_commercial_reconciliation
+except ImportError:
+    apply_commercial_reconciliation = lambda c: {"adjusted_principal_amount": float(c.get("principal_amount", 0)), "reconciliation_details": {}, "new_evidence_gaps": []}
+
 
 app = FastAPI(
     title="Vasuli API — MSME Statutory Debt Recovery Engine",
@@ -447,7 +452,7 @@ async def download_notice_pdf(claim_id: str, tier: str):
     }
     
     interest_data = calculate_interest(
-        float(claim.get("principal_amount", 250000.0)),
+        float(claim.get("adjusted_principal_amount", claim.get("principal_amount", 250000.0))),
         claim.get("invoice_date", "2024-05-10")
     )
 
@@ -483,7 +488,7 @@ async def download_msefc_dossier_pdf(claim_id: str):
         "buyer_name": "Apex Infrastructure Ltd"
     }
     interest_data = calculate_interest(
-        float(claim.get("principal_amount", 250000.0)),
+        float(claim.get("adjusted_principal_amount", claim.get("principal_amount", 250000.0))),
         claim.get("invoice_date", "2024-05-10")
     )
 
@@ -650,9 +655,19 @@ async def person_b_audit_adapter(claim_id: str, request: Request):
         }
         put_claim_record(claim)
 
-    principal = float(claim.get("principal_amount", 250000.0))
+    # Apply Commercial Reconciliation (Cases 8-11)
+    recon_res = apply_commercial_reconciliation(claim)
+    adjusted_principal = recon_res["adjusted_principal_amount"]
+    
+    claim["adjusted_principal_amount"] = adjusted_principal
+    claim["reconciliation"] = recon_res["reconciliation_details"]
+    if recon_res["new_evidence_gaps"]:
+        existing_gaps = claim.get("evidence_gaps", [])
+        existing_gaps.extend(recon_res["new_evidence_gaps"])
+        claim["evidence_gaps"] = existing_gaps
+
     inv_date = claim.get("invoice_date", "2024-05-10")
-    calc_result = calculate_interest(principal, inv_date)
+    calc_result = calculate_interest(adjusted_principal, inv_date)
 
     claim["audit_result"] = calc_result
     claim["status"] = "AUDITED"
@@ -660,7 +675,8 @@ async def person_b_audit_adapter(claim_id: str, request: Request):
 
     return {
         "claim_id": claim_id,
-        "audit": calc_result
+        "audit": calc_result,
+        "reconciliation": recon_res
     }
 
 # --------------------------------------------------------------------------
