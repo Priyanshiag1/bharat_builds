@@ -99,6 +99,14 @@ except ImportError:
         generate_msefc_dossier = None
         generate_settlement_agreement = None
 
+try:
+    from reconciliation import apply_commercial_reconciliation
+except ImportError:
+    try:
+        from .reconciliation import apply_commercial_reconciliation
+    except Exception:
+        apply_commercial_reconciliation = lambda c: {"adjusted_principal_amount": float(c.get("principal_amount", 0)), "reconciliation_details": {}, "new_evidence_gaps": []}
+
 # Structured CloudWatch Live Telemetry Store (Rule 3 Compliance)
 STRUCTURED_TELEMETRY_LOGS = [
     {
@@ -553,13 +561,24 @@ def lambda_handler(event, context):
 
         # POST /claims/{claim_id}/audit
         if stripped_path.endswith("/audit") and http_method == "POST":
-            principal = float(claim.get("principal_amount", 250000.0))
+            # Apply Commercial Reconciliation (Cases 8-11)
+            recon_res = apply_commercial_reconciliation(claim)
+            adjusted_principal = recon_res["adjusted_principal_amount"]
+            
+            # Save reconciliation details to claim
+            claim["adjusted_principal_amount"] = adjusted_principal
+            claim["reconciliation"] = recon_res["reconciliation_details"]
+            if recon_res["new_evidence_gaps"]:
+                existing_gaps = claim.get("evidence_gaps", [])
+                existing_gaps.extend(recon_res["new_evidence_gaps"])
+                claim["evidence_gaps"] = existing_gaps
+                
             inv_date = claim.get("invoice_date", "2024-05-10")
-            calc_result = calculate_interest(principal, inv_date)
+            calc_result = calculate_interest(adjusted_principal, inv_date)
             claim["audit_result"] = calc_result
             claim["status"] = "AUDITED"
             put_claim_record(claim)
-            return response(200, {"claim_id": claim_id, "audit": calc_result})
+            return response(200, {"claim_id": claim_id, "audit": calc_result, "reconciliation": recon_res})
 
         # POST /claims/{claim_id}/classify-excuse
         if stripped_path.endswith("/classify-excuse") and http_method == "POST":
@@ -620,7 +639,7 @@ def lambda_handler(event, context):
             tier = path_params.get("tier", "tier1").upper()
             notice_tier = "TIER_1" if "1" in tier else "TIER_2"
             interest_data = calculate_interest(
-                float(claim.get("principal_amount", 250000.0)),
+                float(claim.get("adjusted_principal_amount", claim.get("principal_amount", 250000.0))),
                 claim.get("invoice_date", "2024-05-10")
             )
             if generate_legal_notice:
@@ -642,7 +661,7 @@ def lambda_handler(event, context):
         # GET /claims/{claim_id}/dossier/pdf
         if stripped_path.endswith("/dossier/pdf") and http_method == "GET":
             interest_data = calculate_interest(
-                float(claim.get("principal_amount", 250000.0)),
+                float(claim.get("adjusted_principal_amount", claim.get("principal_amount", 250000.0))),
                 claim.get("invoice_date", "2024-05-10")
             )
             if generate_msefc_dossier:
@@ -772,7 +791,7 @@ def lambda_handler(event, context):
         # GET /claims/{claim_id}/resolve
         if (stripped_path.endswith("/resolve") or stripped_path.endswith(f"/resolve/{claim_id}")) and http_method == "GET":
             interest_data = calculate_interest(
-                float(claim.get("principal_amount", 250000.0)),
+                float(claim.get("adjusted_principal_amount", claim.get("principal_amount", 250000.0))),
                 claim.get("invoice_date", "2024-05-10")
             )
             return response(200, {
@@ -796,7 +815,7 @@ def lambda_handler(event, context):
 
         if http_method == "GET":
             interest_data = calculate_interest(
-                float(claim.get("principal_amount", 250000.0)),
+                float(claim.get("adjusted_principal_amount", claim.get("principal_amount", 250000.0))),
                 claim.get("invoice_date", "2024-05-10")
             )
             return response(200, {
@@ -855,7 +874,7 @@ def lambda_handler(event, context):
 
         if (stripped_path.endswith(f"/buyer/portal/{token}") or stripped_path == f"/buyer/portal/{token}") and http_method == "GET":
             interest_data = calculate_interest(
-                float(claim.get("principal_amount", 250000.0)),
+                float(claim.get("adjusted_principal_amount", claim.get("principal_amount", 250000.0))),
                 claim.get("invoice_date", "2024-05-10")
             )
             return response(200, {
