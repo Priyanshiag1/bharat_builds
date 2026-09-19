@@ -17,7 +17,7 @@ import {
   FileCheck,
   AlertCircle,
 } from "lucide-react";
-import { getActiveClaim, updateClaimStatus } from "@/lib/api";
+import { getActiveClaim, updateClaimStatus, resolveClaimOnBackend, getSettlementAgreementPdfUrl } from "@/lib/api";
 import { formatINR, formatDate } from "@/lib/utils";
 import { ClaimData } from "@/types/claim";
 
@@ -72,18 +72,20 @@ export default function BuyerSettlementPage() {
     }, 250);
   };
 
-  const handleChooseDiscount = () => {
+  const handleChooseDiscount = async () => {
     setSelectedPlan("DISCOUNT");
     setIsSettled(true);
     updateClaimStatus(claimId, "SETTLED", "LUMP_SUM_DISCOUNT");
     triggerConfetti();
+    await resolveClaimOnBackend(claimId, "LUMP_SUM_DISCOUNT");
   };
 
-  const handleChooseEMI = () => {
+  const handleChooseEMI = async () => {
     setSelectedPlan("EMI");
     setIsSettled(true);
     updateClaimStatus(claimId, "SETTLED", "EMI_PLAN");
     triggerConfetti();
+    await resolveClaimOnBackend(claimId, "EMI_PLAN");
   };
 
   if (!claim) {
@@ -208,6 +210,18 @@ export default function BuyerSettlementPage() {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => {
+                  const url = getSettlementAgreementPdfUrl(claim.claim_id);
+                  window.open(url, "_blank");
+                }}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:brightness-110 text-slate-950 text-xs font-bold flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition"
+                title="Download Official ReportLab Binding Agreement Deed PDF"
+              >
+                <Download className="w-4 h-4" />
+                <span>Official Agreement Deed (PDF)</span>
+              </button>
+
               <button
                 onClick={() => window.print()}
                 className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold flex items-center gap-2 border border-slate-700 transition"

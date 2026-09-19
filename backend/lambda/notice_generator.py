@@ -450,3 +450,7 @@ def generate_settlement_agreement(claim_data: dict, settlement_type: str = "3_PA
         "document_type": "SETTLEMENT_AGREEMENT_DEED",
         "generated_at": datetime.now().isoformat()
     }
+
+# Convenient aliases
+generate_msefc_dossier = generate_tier3_samadhaan_dossier
+

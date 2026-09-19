@@ -6,7 +6,7 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:800
 export async function auditClaim(formData: FormData): Promise<ClaimData> {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
 
     const res = await fetch(`${BACKEND_URL}/api/audit`, {
       method: "POST",
@@ -60,6 +60,34 @@ export function updateClaimStatus(claimId: string, status: "SETTLED" | "NOTICE_S
     localStorage.setItem("vasuli_active_claim", JSON.stringify(updated));
   }
   return updated;
+}
+
+export async function resolveClaimOnBackend(claimId: string, settlementType: "LUMP_SUM_DISCOUNT" | "EMI_PLAN") {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/claims/${claimId}/resolve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ settlement_type: settlementType }),
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (e) {
+    console.warn("Could not reach backend resolution endpoint:", e);
+  }
+  return null;
+}
+
+export function getNoticePdfUrl(claimId: string, tier: "tier1" | "tier2") {
+  return `${BACKEND_URL}/api/claims/${claimId}/notices/${tier}/pdf`;
+}
+
+export function getDossierPdfUrl(claimId: string) {
+  return `${BACKEND_URL}/api/claims/${claimId}/dossier/pdf`;
+}
+
+export function getSettlementAgreementPdfUrl(claimId: string) {
+  return `${BACKEND_URL}/api/claims/${claimId}/settlement-agreement/pdf`;
 }
 
 export function mapClaimAssessmentToClaimData(assessment: any, fallback: ClaimData = mockClaim): ClaimData {

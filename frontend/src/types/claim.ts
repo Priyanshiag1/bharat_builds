@@ -20,6 +20,7 @@ export interface ClaimData {
   counter_reasoning?: string;
   tier_1_letter: string;
   tier_2_notice: string;
+  tier_3_petition?: string;
   status: "AUDITED" | "NOTICE_SENT" | "SETTLED";
   settlement_type?: "LUMP_SUM_DISCOUNT" | "EMI_PLAN";
   settled_at?: string;

@@ -8,12 +8,17 @@ load_dotenv()
 
 REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
 
+from botocore.config import Config
+
+FAST_CFG = Config(connect_timeout=1, read_timeout=1, retries={'max_attempts': 0})
+
 def get_bedrock_client():
     return boto3.client(
         "bedrock-runtime",
         region_name=REGION,
         aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY")
+        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+        config=FAST_CFG
     )
 
 def analyze_buyer_excuse(
@@ -53,20 +58,32 @@ Analyze this excuse and return ONLY a valid JSON object with the following keys:
 - "recommended_action": "TIER_1_AMICABLE" or "TIER_2_STATUTORY_NOTICE" or "TIER_3_SAMADHAAN_FILING"
 - "action_summary": What the MSME owner should do right now.
 """
+    import concurrent.futures
     try:
-        client = get_bedrock_client()
-        body = json.dumps({
-            "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 600,
-            "messages": [{"role": "user", "content": prompt}]
-        })
-        response = client.invoke_model(
-            modelId="anthropic.claude-3-haiku-20240307-v1:0",
-            body=body
-        )
-        res_body = json.loads(response["body"].read().decode("utf-8"))
-        text_content = res_body["content"][0]["text"]
-        
+        def _call_bedrock():
+            client = get_bedrock_client()
+            b = json.dumps({
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": 600,
+                "messages": [{"role": "user", "content": prompt}]
+            })
+            resp = client.invoke_model(
+                modelId="anthropic.claude-3-haiku-20240307-v1:0",
+                body=b
+            )
+            res_body = json.loads(resp["body"].read().decode("utf-8"))
+            return res_body["content"][0]["text"]
+
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        try:
+            future = executor.submit(_call_bedrock)
+            text_content = future.result(timeout=1.5)
+        finally:
+            try:
+                executor.shutdown(wait=False, cancel_futures=True)
+            except Exception:
+                pass
+
         # Extract JSON
         json_match = re.search(r"\{.*\}", text_content, re.DOTALL)
         if json_match:

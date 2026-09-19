@@ -93,7 +93,34 @@ TAKE NOTICE that failure to comply within 15 days will result in a formal refere
 Yours faithfully,
 
 Advocate & Statutory Legal Counsel
-Vasuli AI Automated Recovery Suite`
+Vasuli AI Automated Recovery Suite`,
+
+  tier_3_petition: `PETITION BEFORE THE MICRO AND SMALL ENTERPRISES FACILITATION COUNCIL (MSEFC)
+Under Section 18 read with Sections 15 & 16 of the Micro, Small and Medium Enterprises Development (MSMED) Act, 2006
+
+PARTIES:
+1. Claimant: MSME Supplier (Udyam: UDYAM-MH-01-0012345)
+   Address: Registered Trade Operations, Maharashtra, India
+2. Respondent: Apex Infrastructure Ltd (GSTIN: 07AAAAA0000A1Z5)
+   Address: Commercial District, New Delhi, India
+
+FACTS OF DISPUTE:
+1. The Claimant is a registered Micro/Small Enterprise under the MSMED Act, 2006.
+2. The Claimant delivered industrial assemblies under Invoice No. INV-2024-089 dated 10-May-2024 for Principal INR 2,50,000.00.
+3. Consignment delivery acknowledged via signed Delivery Challan on 14-May-2024 without any defect dispute within statutory 15 days (Section 15 deemed-acceptance).
+4. Statutory credit period of 45 days under Section 15 elapsed on 13-June-2024.
+5. Principal sum remains delinquent for 72 days past the statutory 45-day deadline.
+
+COMPUTATION OF STATUTORY CLAIM UNDER SECTION 16:
+- Principal Sum Overdue: INR 2,50,000.00
+- Statutory Compound Interest (3x RBI Bank Rate = 20.25% compounded monthly): INR 8,450.75
+- Total Claimable Amount: INR 2,58,450.75
+
+PRAYER:
+a) Direct Respondent to immediately remit INR 2,58,450.75 alongside continuing compound interest until full realization.
+b) Issue an Arbitral Award under Section 18(3) enforceable as an arbitration decree.
+
+DATED: Current Date | ATTESTED 1-CLICK SAMADHAAN PETITION DOSSIER`
 };
 
 export const sampleCases = [

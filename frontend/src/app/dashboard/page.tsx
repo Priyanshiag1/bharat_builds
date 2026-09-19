@@ -19,7 +19,7 @@ import {
 import CircularGauge from "@/components/CircularGauge";
 import AnimatedCounter from "@/components/AnimatedCounter";
 import NoticeViewer from "@/components/NoticeViewer";
-import { getActiveClaim } from "@/lib/api";
+import { getActiveClaim, getDossierPdfUrl } from "@/lib/api";
 import { formatINR, formatDate } from "@/lib/utils";
 import { ClaimData } from "@/types/claim";
 
@@ -60,11 +60,22 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          {/* Quick Action CTA to Buyer Portal */}
-          <div className="flex items-center gap-3">
+          {/* Action CTAs */}
+          <div className="flex items-center flex-wrap gap-3">
+            <a
+              href={getDossierPdfUrl(claim.claim_id)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-semibold flex items-center gap-2 border border-slate-600 transition"
+              title="Download Arbitration-Ready 1-Click Dossier"
+            >
+              <Scale className="w-4 h-4 text-amber-400" />
+              <span>MSEFC Dossier (PDF)</span>
+            </a>
+
             <Link
               href={`/resolve/${claim.claim_id}`}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#ff9900] to-amber-500 hover:brightness-110 text-slate-950 text-sm font-bold flex items-center gap-2 shadow-lg shadow-[#ff9900]/20 transition group"
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#ff9900] to-amber-500 hover:brightness-110 text-slate-950 text-xs sm:text-sm font-bold flex items-center gap-2 shadow-lg shadow-[#ff9900]/20 transition group"
             >
               <span>Preview Buyer Portal</span>
               <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -204,6 +215,7 @@ export default function DashboardPage() {
         <NoticeViewer
           tier1Text={claim.tier_1_letter}
           tier2Text={claim.tier_2_notice}
+          tier3Text={claim.tier_3_petition}
           claimId={claim.claim_id}
         />
       </div>

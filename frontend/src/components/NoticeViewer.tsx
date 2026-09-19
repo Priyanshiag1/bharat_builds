@@ -6,18 +6,46 @@ import { Copy, Check, Download, FileText, Scale, ShieldCheck, Printer } from "lu
 interface NoticeViewerProps {
   tier1Text: string;
   tier2Text: string;
+  tier3Text?: string;
   claimId: string;
 }
 
-export default function NoticeViewer({ tier1Text, tier2Text, claimId }: NoticeViewerProps) {
-  const [activeTab, setActiveTab] = useState<"tier1" | "tier2">("tier1");
+export default function NoticeViewer({ tier1Text, tier2Text, tier3Text, claimId }: NoticeViewerProps) {
+  const [activeTab, setActiveTab] = useState<"tier1" | "tier2" | "tier3">("tier1");
   const [copied, setCopied] = useState(false);
 
-  const currentContent = activeTab === "tier1" ? tier1Text : tier2Text;
+  const defaultTier3 = `PETITION BEFORE THE MICRO AND SMALL ENTERPRISES FACILITATION COUNCIL (MSEFC)
+Under Section 18 read with Sections 15 & 16 of the Micro, Small and Medium Enterprises Development (MSMED) Act, 2006
+
+PARTIES:
+1. Claimant: MSME Supplier (Udyam Registered)
+2. Respondent: Debtor Enterprise (Claim Reference: ${claimId})
+
+GROUNDS OF STATUTORY ARBITRATION:
+1. Tax invoice and physical consignment were duly supplied and accepted without dispute within the 15-day objection window (Section 15 deemed-acceptance).
+2. The payment exceeds the 45-day statutory limitation under Section 15 of the MSMED Act, 2006.
+3. Compound interest at 3x the prevailing RBI Bank Rate compounding monthly has accrued under Section 16.
+4. Despite Tier 1 Amicable Notice and Tier 2 Formal Statutory Demand, Respondent has failed to liquidate the outstanding liability.
+
+PRAYER:
+a) Pass an Arbitral Award directing Respondent to remit the full principal and accrued statutory compound interest.
+b) Direct recovery under the summary mechanism of Section 18(3) of the MSMED Act.
+
+VERIFICATION: Complete 1-Click Samadhaan Filing Dossier with audit trail and certified computation compiled.`;
+
+  const currentContent =
+    activeTab === "tier1"
+      ? tier1Text
+      : activeTab === "tier2"
+      ? tier2Text
+      : tier3Text || defaultTier3;
+
   const currentTitle =
     activeTab === "tier1"
       ? "Tier 1: Relationship-Preserving Settlement Notice"
-      : "Tier 2: Statutory Demand Notice (Sections 15 & 16)";
+      : activeTab === "tier2"
+      ? "Tier 2: Statutory Demand Notice (Sections 15 & 16)"
+      : "Tier 3: 1-Click MSEFC Samadhaan Arbitration Dossier (Section 18)";
 
   const handleCopy = async () => {
     try {
@@ -27,6 +55,14 @@ export default function NoticeViewer({ tier1Text, tier2Text, claimId }: NoticeVi
     } catch {
       // fallback
     }
+  };
+
+  const handleDownloadPdf = () => {
+    const pdfUrl =
+      activeTab === "tier3"
+        ? `http://localhost:8000/api/claims/${claimId}/dossier/pdf`
+        : `http://localhost:8000/api/claims/${claimId}/notices/${activeTab}/pdf`;
+    window.open(pdfUrl, "_blank");
   };
 
   const handleDownload = () => {
@@ -74,12 +110,12 @@ export default function NoticeViewer({ tier1Text, tier2Text, claimId }: NoticeVi
           </span>
           <h3 className="text-lg font-bold text-white flex items-center gap-2 mt-0.5">
             <FileText className="w-5 h-5 text-[#ff9900]" />
-            Generated Multi-Tier Notices
+            Generated Multi-Tier Notices & Dossier
           </h3>
         </div>
 
         {/* Tab Toggle Buttons */}
-        <div className="flex items-center bg-slate-950/80 p-1 rounded-xl border border-slate-800">
+        <div className="flex items-center bg-slate-950/80 p-1 rounded-xl border border-slate-800 flex-wrap gap-1">
           <button
             type="button"
             onClick={() => setActiveTab("tier1")}
@@ -104,6 +140,18 @@ export default function NoticeViewer({ tier1Text, tier2Text, claimId }: NoticeVi
             <Scale className="w-3.5 h-3.5" />
             <span>Tier 2: Statutory Notice</span>
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("tier3")}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === "tier3"
+                ? "bg-slate-800 text-amber-400 shadow-sm border border-amber-500/30"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Tier 3: MSEFC Dossier</span>
+          </button>
         </div>
       </div>
 
@@ -112,7 +160,9 @@ export default function NoticeViewer({ tier1Text, tier2Text, claimId }: NoticeVi
         className={`px-5 py-3 text-xs border-b font-medium flex items-center justify-between ${
           activeTab === "tier1"
             ? "bg-emerald-950/40 border-emerald-500/20 text-emerald-300"
-            : "bg-rose-950/40 border-rose-500/20 text-rose-300"
+            : activeTab === "tier2"
+            ? "bg-rose-950/40 border-rose-500/20 text-rose-300"
+            : "bg-amber-950/40 border-amber-500/20 text-amber-300"
         }`}
       >
         <div className="flex items-center gap-2">
@@ -120,7 +170,9 @@ export default function NoticeViewer({ tier1Text, tier2Text, claimId }: NoticeVi
           <span>
             {activeTab === "tier1"
               ? "Commercial tone: Offers 5% early discount waiver on statutory interest within 48 hours."
-              : "Strict legal register: Formally invokes Section 15 & 16 with mandatory 15-day cure notice."}
+              : activeTab === "tier2"
+              ? "Strict legal register: Formally invokes Section 15 & 16 with mandatory 15-day cure notice."
+              : "Arbitration register: 1-Click MSEFC Samadhaan petition dossier ready with audit calculations & statutory grounds."}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -134,12 +186,21 @@ export default function NoticeViewer({ tier1Text, tier2Text, claimId }: NoticeVi
           </button>
 
           <button
-            onClick={handleDownload}
-            className="flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-600/60 transition"
-            title="Download Notice"
+            onClick={handleDownloadPdf}
+            className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#ff9900] hover:bg-amber-400 text-slate-950 text-xs font-bold shadow-sm transition"
+            title="Download Official ReportLab Legal PDF"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Download</span>
+            <span>Official PDF</span>
+          </button>
+
+          <button
+            onClick={handleDownload}
+            className="flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-600/60 transition"
+            title="Download Notice as TXT"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>Text</span>
           </button>
 
           <button
