@@ -29,13 +29,24 @@ from api_handler import (
     STRUCTURED_TELEMETRY_LOGS,
     log_telemetry_event
 )
-from legal_math import calculate_msme_penal_interest
+from legal_math import (
+    calculate_msme_penal_interest,
+    check_udyam_eligibility,
+    check_trader_exclusion,
+    check_contractual_terms_override,
+    apply_statutory_appropriation,
+    calculate_section_43bh_tax_status,
+    check_presumptive_tax_status,
+    check_ibc_moratorium_status
+)
 from textract_service import extract_invoice_data
 from classifier_service import analyze_buyer_excuse
 from notice_generator import (
     generate_legal_notice,
     generate_msefc_dossier,
-    generate_settlement_agreement
+    generate_settlement_agreement,
+    generate_rpad_postal_dispatch_slip,
+    generate_ibbi_form_b
 )
 
 app = FastAPI(
@@ -328,6 +339,18 @@ Pursuant to Section 43B(h) enacted under Finance Act 2023, failure to liquidate 
         "tier_1_pdf_url": t1_pdf.get("presigned_url", f"/api/claims/{claim_id}/notices/tier1/pdf"),
         "tier_2_pdf_url": t2_pdf.get("presigned_url", f"/api/claims/{claim_id}/notices/tier2/pdf"),
         "dossier_pdf_url": dossier_pdf.get("presigned_url", f"/api/claims/{claim_id}/dossier/pdf"),
+        "rpad_pdf_url": f"/api/claims/{claim_id}/rpad/pdf",
+        "ibbi_form_b_url": f"/api/claims/{claim_id}/ibbi-form-b/pdf",
+        
+        # Statutory Edge Cases Audit Breakdown (Categories 3, 4, 5)
+        "statutory_edge_cases": {
+            "udyam_eligibility": check_udyam_eligibility(extracted_invoice["invoice_date"], None),
+            "trader_exclusion": check_trader_exclusion("28110"),
+            "contractual_override": check_contractual_terms_override(extracted_invoice.get("agreed_credit_days", 30)),
+            "sec_43bh_tax_timing": calculate_section_43bh_tax_status(extracted_invoice["principal_amount"], statutory_due_date),
+            "presumptive_tax": check_presumptive_tax_status(extracted_invoice["buyer_name"]),
+            "ibc_moratorium": check_ibc_moratorium_status("ACTIVE")
+        },
         
         # Person B ClaimAssessment Schema compatibility
         "claimId": claim_id,
@@ -545,6 +568,67 @@ async def download_settlement_deed_pdf(claim_id: str):
         content=json.dumps({"url": agreement_res.get("presigned_url")}),
         media_type="application/json"
     )
+
+@app.get("/api/claims/{claim_id}/rpad/pdf")
+async def download_rpad_slip_pdf(claim_id: str):
+    """
+    Edge Case 22: Downloads the India Post RPAD Dispatch Slip & Cover PDF.
+    """
+    claim = get_claim_record(claim_id) or {
+        "claim_id": claim_id,
+        "principal_amount": 250000.0,
+        "invoice_number": "INV-2024-089",
+        "seller_name": "Bharat Precision Components Pvt Ltd",
+        "buyer_name": "Apex Infrastructure Ltd"
+    }
+    math_result = calculate_interest(float(claim.get("principal_amount", 250000.0)), claim.get("invoice_date", "2024-05-10"))
+    rpad_res = generate_rpad_postal_dispatch_slip(claim, math_result)
+    local_path = os.path.join(STORAGE_DIR, rpad_res.get("s3_key", f"rpad_slips/{claim_id}/rpad_slip.pdf"))
+    if os.path.exists(local_path):
+        return FileResponse(local_path, media_type="application/pdf", filename=f"{claim_id}_RPAD_DISPATCH_SLIP.pdf")
+    return Response(content=json.dumps({"url": rpad_res.get("presigned_url"), "consignment_number": rpad_res.get("consignment_number")}), media_type="application/json")
+
+@app.get("/api/claims/{claim_id}/ibbi-form-b/pdf")
+async def download_ibbi_form_b_pdf(claim_id: str):
+    """
+    Edge Case 23: Downloads the official IBBI Form B Operational Creditor Claim PDF.
+    """
+    claim = get_claim_record(claim_id) or {
+        "claim_id": claim_id,
+        "principal_amount": 250000.0,
+        "invoice_number": "INV-2024-089",
+        "seller_name": "Bharat Precision Components Pvt Ltd",
+        "buyer_name": "Apex Infrastructure Ltd"
+    }
+    math_result = calculate_interest(float(claim.get("principal_amount", 250000.0)), claim.get("invoice_date", "2024-05-10"))
+    ibbi_res = generate_ibbi_form_b(claim, math_result)
+    local_path = os.path.join(STORAGE_DIR, ibbi_res.get("s3_key", f"ibc_claims/{claim_id}/form_b.pdf"))
+    if os.path.exists(local_path):
+        return FileResponse(local_path, media_type="application/pdf", filename=f"{claim_id}_IBBI_FORM_B_CLAIM.pdf")
+    return Response(content=json.dumps({"url": ibbi_res.get("presigned_url")}), media_type="application/json")
+
+@app.post("/api/claims/{claim_id}/appropriate-payment")
+async def appropriate_payment_endpoint(claim_id: str, request: Request):
+    """
+    Edge Case 16: Computes Gurpreet Singh v. UOI statutory appropriation for partial payments.
+    """
+    body = await request.json()
+    payment_amount = float(body.get("payment_amount", 50000.0))
+    debtor_remark = body.get("debtor_remark", "Towards principal only")
+    claim = get_claim_record(claim_id) or {
+        "claim_id": claim_id,
+        "principal_amount": 250000.0,
+        "invoice_date": "2024-05-10"
+    }
+    principal = float(claim.get("principal_amount", 250000.0))
+    interest_data = calculate_interest(principal, claim.get("invoice_date", "2024-05-10"))
+    accrued_int = float(interest_data.get("interest_accrued", 18180.0))
+    
+    approp = apply_statutory_appropriation(principal, accrued_int, payment_amount, debtor_remark)
+    claim["principal_amount"] = approp["remaining_principal"]
+    claim["last_payment_appropriation"] = approp
+    put_claim_record(claim)
+    return {"claim_id": claim_id, "appropriation": approp}
 
 # --------------------------------------------------------------------------
 # Person B CLI / Test Adapter Route (POST /claims/{claim_id}/audit)

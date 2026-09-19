@@ -97,18 +97,31 @@ Analyze this excuse and return ONLY a valid JSON object with the following keys:
     # Local Statutory Reasoning Heuristic Engine
     lower = excuse_text.lower()
     
-    # 1. Check Quality / Defect dispute
-    if any(k in lower for k in ["defect", "quality", "damaged", "rejection", "sample", "finish", "broken", "specs", "wrong item"]):
-        category = "LATE_QUALITY_DISPUTE"
-        label = "Belated Quality Dispute (Statutorily Barred)"
-        if days_since_delivery > 15:
-            vuln = f"Section 15 MSMED Act Proviso: Objection raised after {days_since_delivery} days. Under Indian statutory law, buyer has only 15 days from delivery to lodge defect objections. Deemed acceptance applies."
-            counter = f"Pursuant to the Proviso to Section 15 of MSMED Act 2006, any dispute regarding quality or specifications was required to be communicated within 15 days of delivery. Goods were delivered {days_since_delivery} days ago with signed POD. This belated objection is legally void and barred before the MSEFC Council."
+    # 1. Check Quality / Defect dispute (Edge Case 14: Patent vs Latent Defect Distinction)
+    if any(k in lower for k in ["defect", "quality", "damaged", "rejection", "sample", "finish", "broken", "specs", "wrong item", "chemical", "porosity", "alloy", "tensile", "cracked internally", "lab test", "scratch", "paint", "packaging", "torn", "substandard"]):
+        # Check if latent (hidden internal) defect under Sale of Goods Act 1930
+        is_latent_defect = any(k in lower for k in ["chemical", "porosity", "alloy", "tensile", "cracked internally", "lab test", "metallurgy", "composition", "melting"])
+        
+        if is_latent_defect:
+            category = "LATENT_DEFECT_DISPUTE"
+            label = "Latent (Internal) Defect Claim (Sale of Goods Act Sec 15/16)"
+            vuln = "Sale of Goods Act, 1930 Sections 15 & 16: Latent/hidden defects not discoverable by ordinary visual examination on delivery may be objected upon reasonable use."
+            counter = f"Debtor cites internal/latent material defects. While Section 2(b) of MSMED Act sets a 15-day objection threshold for patent defects, Sale of Goods Act permits latent defect objections. Creditor proposes immediate NABL-accredited joint lab testing within 7 days. Statutory penal interest (16.50% p.a.) remains paused conditionally pending verified test certificate."
+            score = 55
+            rec = "TIER_1_AMICABLE"
+            summary = "Propose joint testing at an accredited NABL laboratory. If test passes or buyer refuses testing, demand immediate payment plus 16.50% interest."
+        elif days_since_delivery > 15:
+            category = "LATE_QUALITY_DISPUTE"
+            label = "Belated Patent Defect Dispute (Statutorily Barred)"
+            vuln = f"Section 2(b) Explanation (i) & Section 15 Proviso MSMED Act 2006: Patent/visible objection raised after {days_since_delivery} days (>15 days). Deemed acceptance applies by operation of law."
+            counter = f"Pursuant to Section 2(b) Explanation of the MSMED Act 2006, objection regarding visible quality or specifications must be notified in writing strictly within 15 days of delivery. Goods were delivered {days_since_delivery} days ago with signed POD. This belated objection is legally invalid and inadmissible before the MSEFC Council."
             score = 15
             rec = "TIER_2_STATUTORY_NOTICE"
-            summary = "Reject late defect claim citing Section 15 15-day deemed acceptance rule. Issue Tier-2 Statutory Notice."
+            summary = "Reject late patent defect claim citing Section 2(b) 15-day deemed acceptance rule. Issue Tier-2 Statutory Notice."
         else:
-            vuln = "Section 15 MSMED Act: Defect raised within 15 days. Joint inspection required."
+            category = "TIMELY_QUALITY_DISPUTE"
+            label = "Timely Quality Dispute (<15 Days Statutory Window)"
+            vuln = "Section 2(b) MSMED Act: Defect raised within statutory 15-day window. Formal joint inspection required."
             counter = "Immediate joint inspection requested within 48 hours. If buyer fails to produce defective samples, full invoice amount remains due under Section 15."
             score = 65
             rec = "TIER_1_AMICABLE"
