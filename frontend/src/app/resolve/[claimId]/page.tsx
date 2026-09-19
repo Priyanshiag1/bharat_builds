@@ -36,6 +36,7 @@ export default function ResolvePage() {
     if (data.status === "SETTLED") {
       setIsSettled(true);
       setSelectedPlan(data.settlement_type === "EMI_PLAN" ? "EMI" : "DISCOUNT");
+    }
   }, [claimId]);
 
   if (!claim) {

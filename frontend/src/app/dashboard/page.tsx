@@ -44,6 +44,8 @@ export default function DashboardPage() {
     dispatched_at: string;
   } | null>(null);
   const [waDispatched, setWaDispatched] = useState(false);
+  const [dispatchResult, setDispatchResult] = useState<any>(null);
+  const [showDispatchModal, setShowDispatchModal] = useState(false);
 
   // ⭐ The Killer Interactive Feature: Time-Decay Penalty Slider (Default 72 days)
   const [simulatedDays, setSimulatedDays] = useState<number>(72);
@@ -101,14 +103,16 @@ export default function DashboardPage() {
   const handleSesDispatch = async () => {
     setIsDispatchingSes(true);
     try {
-      const res = await dispatchNotice(claim.claim_id, "email");
+      const res = await dispatchNotice(claim.claim_id, claim.buyer_email, claim.buyer_phone);
       const timestamp = new Date().toLocaleTimeString();
       setSesDispatchResult({
-        message_id: res.message_id || `ses-msg-${claim.claim_id}-DEMO`,
-        execution_arn: res.execution_arn || `arn:aws:states:us-east-1:123456789012:execution:vasuli-recovery-workflow-demo:${claim.claim_id}`,
-        status: res.status || "DELIVERED",
+        message_id: (res as any)?.channels?.email?.message_id || (res as any)?.message_id || `ses-msg-${claim.claim_id}-DEMO`,
+        execution_arn: (res as any)?.channels?.step_functions?.execution_arn || (res as any)?.execution_arn || `arn:aws:states:us-east-1:123456789012:execution:vasuli-recovery-workflow-demo:${claim.claim_id}`,
+        status: (res as any)?.channels?.email?.status || (res as any)?.status || "DELIVERED",
         dispatched_at: timestamp,
       });
+      setDispatchResult(res);
+      setShowDispatchModal(true);
     } finally {
       setIsDispatchingSes(false);
     }
@@ -535,7 +539,6 @@ ${resolvePortalUrl}`;
                 <ExternalLink className="w-3.5 h-3.5" />
               </Link>
             </div>
->>>>>>> feature/person-a-edge-cases-ui
           </div>
         </div>
 
