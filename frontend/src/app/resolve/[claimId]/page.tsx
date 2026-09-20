@@ -88,7 +88,7 @@ export default function ResolvePage() {
   };
 
   return (
-    <div className="min-h-screen text-slate-100 py-10 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen text-slate-100 py-10 px-4 sm:px-6 lg:px-8 w-full max-w-full overflow-x-hidden">
       <div className="max-w-4xl mx-auto space-y-8">
         
         {/* Buyer Header Banner */}

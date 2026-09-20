@@ -137,7 +137,7 @@ ${resolvePortalUrl}`;
   const waDeepLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waMessage)}`;
 
   return (
-    <div className="min-h-screen text-slate-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen text-slate-100 py-8 px-4 sm:px-6 lg:px-8 w-full max-w-full overflow-x-hidden">
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Top Header Card */}
@@ -386,7 +386,7 @@ ${resolvePortalUrl}`;
               </p>
             </div>
 
-            <div className="bg-slate-950/80 border border-purple-500/30 rounded-xl p-4 min-w-[260px] space-y-2 shrink-0">
+            <div className="bg-slate-950/80 border border-purple-500/30 rounded-xl p-4 w-full lg:w-auto lg:min-w-[260px] space-y-2 shrink-0">
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
                 Total Exposure Breakdown
               </span>

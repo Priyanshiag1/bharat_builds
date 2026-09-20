@@ -256,7 +256,7 @@ export default function IntakePage() {
   };
 
   return (
-    <div className="min-h-screen text-slate-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen text-slate-100 py-8 px-4 sm:px-6 lg:px-8 w-full max-w-full overflow-x-hidden">
       <LoadingOverlay isOpen={isLoading} onComplete={handleAuditComplete} />
 
       <div className="max-w-5xl mx-auto space-y-8">

@@ -45,11 +45,12 @@ export default function AwsTelemetryModal() {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 to-[#ff9900]/10 border border-[#ff9900]/40 text-[#ff9900] hover:bg-[#ff9900]/20 text-xs font-bold transition shadow-sm shrink-0 whitespace-nowrap cursor-pointer"
+        className="flex items-center gap-1.5 px-2 sm:px-2.5 lg:px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 to-[#ff9900]/10 border border-[#ff9900]/40 text-[#ff9900] hover:bg-[#ff9900]/20 text-xs font-bold transition shadow-sm shrink-0 whitespace-nowrap cursor-pointer"
       >
         <Cloud className="w-3.5 h-3.5 text-[#ff9900] animate-pulse shrink-0" />
-        <span>AWS Archi & Telemetry</span>
-        <span className="text-[10px] bg-[#ff9900]/20 px-1 py-0.2 rounded font-mono hidden sm:inline">
+        <span className="hidden md:inline">AWS Telemetry</span>
+        <span className="inline md:hidden">AWS</span>
+        <span className="text-[10px] bg-[#ff9900]/20 px-1 py-0.2 rounded font-mono hidden 2xl:inline">
           us-east-1
         </span>
       </button>
